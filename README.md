@@ -7,6 +7,8 @@ Some of those commands can only be used by a Master. Every LÖVE developer is re
 If a command requires a Master, it will accept any master. If it requires a Rank 0 Master, it has to be a hardcoded one.
 There's currently no way to add a Rank 0 master in runtime and I don't want to add one, even though it would be easy.
 
+
+
 Commands list:
 
 !poke nick: sends a mean CTCP ACTION command which has nick as object (e.g: Nixbot installed Windows Vista on Nixola's PC).
