@@ -27,4 +27,4 @@ Commands list:
 
 !secret: it can only be called by Nix. Makes Nix the only Master, a Rank 0 one.
 
-!help: sends informations toabout itself to users.
+!help: sends informations about itself to the user who calls it.
