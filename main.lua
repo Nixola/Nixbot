@@ -200,7 +200,7 @@ function love.load()
 	nick = "Nixbot"
 	address = "irc.oftc.net"
 	port = 6667
-	channel = "#nixtests"
+	channel = "#love"
 	
 	-- now connect to the server
 	local ok = irc:connect(address,port)
