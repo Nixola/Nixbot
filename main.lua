@@ -274,18 +274,24 @@ vrld = 0,
 Nix = 0
 }
 
+ignored = {}
+
 helpStr = {
-"Nixbot was made by Nix, who modified Kawata's code and added Nikolai Resokav's LoveFrames.",
-"By default it will recognize bartbes, bmelts, rude, slime, thelinx, vrld and Nix as High Masters.",
-"It has some commands, which can be called by writing !command args.",
-"poke (nick): does something bad to nick.",
-"quit (): stops the bot. A Master is needed to do that.",
-"lock (): locks the bot, so that he'll only parse Masters' messages. A Master is needed to do that.",
-"free (): unlocks the bot, so that he'll parse everyone's messages. A Master is needed to do that.",
-"obey (nick): nick becomes a Master. A Master is needed to do that.",
-"disobey (nick): nick isn't a Master (or High Master) anymore. A High Master is needed to do that.",
-"join (channel): parts from the current channel to join a new one.",
-"help (): I'm a douchebag and I won't tell you."}
+"Nixbot is a single channel IRC bot made with LÖVE (http://love2d.org) based on Kawata's code that uses Nikolai Resokav's (http://nikolairesokav.com) LoveFrames as GUI.",
+"It will answer to te sentences \"Nixbot!\", \"Bots!\" and \"Circuloid!\", as well as some commands that I'm about to list.",
+"Some of those commands can only be used by a Master. Every LÖVE developer is recognized as a Rank 0 master, as well as me.",
+"If a command requires a Master, it will accept any master. If it requires a Rank 0 Master, it has to be a hardcoded one.",
+"There's currently no way to add a Rank 0 master in runtime and I don't want to add one, even though it would be easy.",
+"!poke nick: sends a mean CTCP ACTION command which has nick as object (e.g: Nixbot installed Windows Vista on Nixola's PC).",
+"!quit: shuts the bot down. A Master is required.",
+"!lock: locks the bot, so that it will ignore every message but Masters' ones. A Master is required.",
+"!free: unlocks the bot, so that it will parse everyone's messages again.",
+"!obey nick: makes nick a Rank 1 Master. A Master is required.",
+"!disobey nick: revokes the Master status on Nix. A Rank 0 Master is required.",
+"!join channel: makes the bot part from the current channel to join a new one. A Master is required.",
+"!ignore nick: makes the bot ignore every nick's message until !listen nick is used. A Master is required.",
+"!listen nick: makes the bot listen again to an ignored user. A Master is required.",
+"!help: sends this message as a notice to who calls it."}
 
 pokeSentences = {
 'got %s laid',
@@ -374,6 +380,31 @@ local com = {
 	secret = function(_, source)
 		if source == "Nix" then
 			masters = {Nix = 0}
+			ignored.Nix = false
+		end
+	end,
+	ignore = function(nick, source)
+		if masters[source] then
+			if not ignored[nick] then
+				ignored[nick] = true
+				sendNotice(nick.." will be ignored from now hence.", source)
+			else
+				sendNotice(nick.." is already being ignored, master.", source)
+			end
+		else
+			sendNotice("You're not my master! You won't control me!", source)
+		end
+	end,
+	listen = function(nick, source)
+		if masters[source] then
+			if ignored[nick] then
+				ignored[nick] = false
+				sendNotice("I will listen to "..nick.." now.", source)
+			else
+				sendNotice("I'm not ignoring "..nick..", master.", source)
+			end
+		else
+			sendNotice("You're not my master! You won't control me!", source)
 		end
 	end,
 	help = function(_, source)
@@ -405,7 +436,7 @@ function process(lerp)
 		--if source == 'josePHPagoda' then sendMessage "JesseH" end
 		
 		--
-		if (not settings.Master) or (settings.Master and masters[source]) then
+		if ((not settings.Master) or (settings.Master and masters[source])) and not ignored[source] then
 		
 			rawmsg = rawmsg or ''
 			if rawmsg:lower() == 'nixbot!' then sendMessage("I like you, "..tostring(source)..'!') elseif

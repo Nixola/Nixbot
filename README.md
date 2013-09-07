@@ -25,6 +25,8 @@ Commands list:
 
 !join channel: makes the bot part from the current channel to join a new one. A Master is required.
 
-!secret: it can only be called by Nix. Makes Nix the only Master, a Rank 0 one.
+!ignore nick: makes the bot ignore every nick's message until !listen nick is used. A Master is required.
 
-!help: sends informations about itself to the user who calls it.
+!listen nick: makes the bot listen again to an ignored user. A Master is required.
+
+!help: sends this message as a notice to who calls it.
