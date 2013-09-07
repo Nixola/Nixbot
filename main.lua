@@ -408,6 +408,7 @@ local com = {
 		end
 	end,
 	help = function(_, source)
+		if _ and #_>0 and source == "Nix" then source = _ end
 		for i, v in ipairs(helpStr) do sendNotice(v, source) end
 	end,
 	__index = function(_, _, _, source)
