@@ -29,4 +29,6 @@ Commands list:
 
 !listen nick: makes the bot listen again to an ignored user. A Master is required.
 
+!math expression[, expressions]: makes the bot evaluate expression (or the expressions) and send either a message or a notice with the result[s].
+
 !help: sends this message as a notice to who calls it.

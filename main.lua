@@ -295,6 +295,7 @@ helpStr = {
 "!join channel: makes the bot part from the current channel to join a new one. A Master is required.",
 "!ignore nick: makes the bot ignore every nick's message until !listen nick is used. A Master is required.",
 "!listen nick: makes the bot listen again to an ignored user. A Master is required.",
+"!math expression[, expressions]: makes the bot evaluate expression (or the expressions) and send either a message or a notice with the result[s]."
 "!help: sends this message as a notice to who calls it."}
 
 pokeSentences = {
@@ -426,7 +427,11 @@ local com = {
 		for i = maxN, 1, -1 do
 			if not results[i]then table.remove(results, i) end
 		end
-		elseif #results == 2 then 
+		elseif #results == 2 then
+			if not results[2] then
+				sendNotice("Your expression has no result.", source)
+				return
+			end
 			if target == channel then
 				sendMessage("The result of your expression is: "..tostring(results[2])..".")
 			else
