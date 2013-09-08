@@ -334,7 +334,7 @@ local com = {
 			if settings.Master then
 				sendNotice("I'm already obeying you and you only, my master.", source)
 			else
-				sendNotice "From now hence, I will only obey you, my masters."
+				sendNotice("From now hence, I will only obey you, my master.", source)
 				settings.Master = true
 			end
 		else
@@ -343,7 +343,7 @@ local com = {
 	end,
 	free = function()
 		if not settings.Master then return end
-		sendNotice "As you wish, my masters. I will listen to everyone now."
+		sendNotice("As you wish, my master. I will listen to everyone now.", source)
 		settings.Master = false
 	end,
 	obey = function(nick, source)
@@ -353,7 +353,7 @@ local com = {
 				return
 			end
 			masters[nick] = 1
-			sendNotice("I will obey "..nick.." now.")
+			sendNotice("I will obey "..nick.." now.", source)
 		else
 			sendNotice("You're not my master! You won't control me!", source)
 		end
@@ -365,7 +365,7 @@ local com = {
 				return
 			end
 			masters[nick] = false
-			sendNotice(nick.." is not my master anymore.")
+			sendNotice(nick.." is not my master anymore.", source)
 		elseif masters[source] == 1 then
 			sendNotice("I need a High Master to do that.", source)
 		else
@@ -417,21 +417,21 @@ local com = {
 	end,
 	math = function(code, source, target)
 		if not code or #code == 0 then sendNotice("Do you want me to guess the expression you wanna know the result of?", source) return end
-		if code:find '"' or code:find "'" or code:find '{' or code:find 'function' or code:match "%[%=*%[" then sendNotice("You just WON'T hang me. Fuck you.", source) return end
+		if code:find '"' or code:find "'" or code:find '{' or code:find 'function' or code:match "%[%=*%[" or code:find '..' then sendNotice("You just WON'T hang me. Fuck you.", source) return end
 		local expr, err = loadstring("return "..code)
 		if not expr then sendNotice(err, source) return end
 		setfenv(expr, mathEnv)
 		local results = {pcall(expr)}
-		if not results[1] then sendNotice("test", source); sendNotice(results[2], source);
+		if not results[1] then sendNotice(results[2], source) return end
 		local maxN = table.maxn(results)
 		for i = maxN, 1, -1 do
 			if not results[i]then table.remove(results, i) end
 		end
-		elseif #results == 2 then
-			if not results[2] then
-				sendNotice("Your expression has no result.", source)
-				return
-			end
+		if not results[2] then
+			sendNotice("Your expression has no result.", source)
+			return
+		end
+		if #results == 2 then
 			if target == channel then
 				sendMessage("The result of your expression is: "..tostring(results[2])..".")
 			else
