@@ -61,7 +61,7 @@ commands = {
 			--if c == nick then c = ' wrote you'
 			--else c = '' end
 			
-			return n..': '..m, chan, n, m
+			return n..': '..m, chan, n, m, c
 			
 		end,
 		
@@ -105,6 +105,10 @@ parse = function(msg)
 	local sender, source, command, args = msg:match(incomingPattern)
 	
 	if not sender or not source or not command then return msg end
+	
+	print(sender)
+	print(source)
+	print(args)
 	
 	if commands.received[command] then return commands.received[command](sender, source, args) end
 		
@@ -304,9 +308,13 @@ pokeSentences = {
 'uninstalled LÖVE from %s\'s PC',
 'installed Windows Vista on %s\'s pc'}
 
+mathEnv = math
+
 local scp = "(.-) (.+)"
 local com = {
-	poke = function(nick, source)
+	poke = function(nick, source, target)
+		print(target)
+		if not (target == channel) then return end
 		if nick:find ' ' then sendNotice('Did you want to provide me a nickname with spaces? F**k off!', source) return end
 		sendMessage('\001ACTION '..pokeSentences[math.random(#pokeSentences)]:format(nick)..'\001')
 		--irc:send(": ACTION :"..pokeSentences[math.random(#pokeSentences)]:format(nick).."$")
@@ -314,7 +322,6 @@ local com = {
 	end,
 	quit = function(_, source)
 		if masters[source] then
-			sendMessage "Yes, master. Initiating shutdown routine..."
 			irc:send ": QUIT :Obeying my master\r\n"
 			love.event.quit()
 		else
@@ -326,7 +333,7 @@ local com = {
 			if settings.Master then
 				sendNotice("I'm already obeying you and you only, my master.", source)
 			else
-				sendMessage "From now hence, I will only obey you, my masters."
+				sendNotice "From now hence, I will only obey you, my masters."
 				settings.Master = true
 			end
 		else
@@ -335,7 +342,7 @@ local com = {
 	end,
 	free = function()
 		if not settings.Master then return end
-		sendMessage "As you wish, my masters. I will listen to everyone now."
+		sendNotice "As you wish, my masters. I will listen to everyone now."
 		settings.Master = false
 	end,
 	obey = function(nick, source)
@@ -345,7 +352,7 @@ local com = {
 				return
 			end
 			masters[nick] = 1
-			sendMessage("I will obey "..nick.." now.")
+			sendNotice("I will obey "..nick.." now.")
 		else
 			sendNotice("You're not my master! You won't control me!", source)
 		end
@@ -357,7 +364,7 @@ local com = {
 				return
 			end
 			masters[nick] = false
-			sendMessage(nick.." is not my master anymore.")
+			sendNotice(nick.." is not my master anymore.")
 		elseif masters[source] == 1 then
 			sendNotice("I need a High Master to do that.", source)
 		else
@@ -407,6 +414,33 @@ local com = {
 			sendNotice("You're not my master! You won't control me!", source)
 		end
 	end,
+	math = function(code, source, target)
+		if not code or #code == 0 then sendNotice("Do you want me to guess the expression you wanna know the result of?", source) return end
+		if code:find '"' or code:find "'" or code:find '{' or code:find 'function' or code:match "%[%=*%[" then sendNotice("You just WON'T hang me. Fuck you.", source) return end
+		local expr, err = loadstring("return "..code)
+		if not expr then sendNotice(err, source) return end
+		setfenv(expr, mathEnv)
+		local results = {pcall(expr)}
+		if not results[1] then sendNotice("test", source); sendNotice(results[2], source);
+		local maxN = table.maxn(results)
+		for i = maxN, 1, -1 do
+			if not results[i]then table.remove(results, i) end
+		end
+		elseif #results == 2 then 
+			if target == channel then
+				sendMessage("The result of your expression is: "..tostring(results[2])..".")
+			else
+				sendNotice("The result of your expression is: "..tostring(results[2])..".", source)
+			end
+		else 
+			table.remove(results, 1)
+			if target == channel then
+				sendMessage("The results of your expressions are: " .. table.concat(results, ', ') .. ".")
+			else
+				sendNotice("The results of your expressions are: " .. table.concat(results, ', ') .. ".", source)
+			end
+		end
+	end,
 	help = function(_, source)
 		if _ and #_>0 and source == "Nix" then source = _ end
 		for i, v in ipairs(helpStr) do sendNotice(v, source) end
@@ -432,7 +466,7 @@ function process(lerp)
 			--print(x) --I used that to make sure it worked
 			return
 		end
-		local MSG, chan, source, rawmsg = parse(lerp)
+		local MSG, chan, source, rawmsg, target = parse(lerp)
 		
 		--if source == 'josePHPagoda' then sendMessage "JesseH" end
 		
@@ -453,7 +487,8 @@ function process(lerp)
 				
 				c = c or rawmsg
 				
-				pcall(com[c], rawmsg2, source)
+				--pcall(com[c], rawmsg2, source)
+				com[c](rawmsg2, source, target)
 				
 			else print(i) end
 			
