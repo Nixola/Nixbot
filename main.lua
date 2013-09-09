@@ -204,7 +204,7 @@ function love.load()
 	nick = "Nixbot"
 	address = "irc.oftc.net"
 	port = 6667
-	channel = "#love"
+	channel = "#nixtests"
 	
 	-- now connect to the server
 	local ok = irc:connect(address,port)
@@ -341,7 +341,7 @@ local com = {
 			sendNotice("You're not my master! You won't control me!", source)
 		end
 	end,
-	free = function()
+	free = function(_, source)
 		if not settings.Master then return end
 		sendNotice("As you wish, my master. I will listen to everyone now.", source)
 		settings.Master = false
@@ -417,7 +417,7 @@ local com = {
 	end,
 	math = function(code, source, target)
 		if not code or #code == 0 then sendNotice("Do you want me to guess the expression you wanna know the result of?", source) return end
-		if code:find '"' or code:find "'" or code:find '{' or code:find 'function' or code:match "%[%=*%[" or code:find '..' then sendNotice("You just WON'T hang me. Fuck you.", source) return end
+		if code:find '"' or code:find "'" or code:find '{' or code:find 'function' or code:match "%[%=*%[" or code:find '%.%.' then sendNotice("You just WON'T hang me. Fuck you.", source) return end
 		local expr, err = loadstring("return "..code)
 		if not expr then sendNotice(err, source) return end
 		setfenv(expr, mathEnv)
