@@ -1,25 +1,6 @@
---[[ LuaBot 1.0
-
-	Author: NightKawata
-	License: Free to use for anything, credit would be nice (mention my name if you're drugged enough to use this for a commercial project)
-	
-	THIS IS ONLY THE BARE BONES.
-	THIS BOT WILL CONNECT TO ANY NETWORK YOU WANT, AND IT WILL (USUALLY) NOT PING TIMEOUT. (DEPENDS ON YOUR INTERNET)
-	
-	I did not design the bot to do anything more or less. :P
-	
-	Note by Nixola: I designed the bot to become a client! Yay!
-	Also, the GUI is LoveFrames by Kenny Shields, or Nikolai Resokav. It's way more awesome than anything I could have ever made.
-
-
---]]
-
 settings = {showSource = false}
-
 incomingPattern = [[
-:(.-)!(.-)%s(%u-)%s(.-)$]]--[[
-nick  source command args--]]
-
+:(.-)!(.-)%s(%u-)%s(.-)$]]
 patterns = {
 
 	JOIN = '%:(.-)$',
@@ -58,8 +39,6 @@ commands = {
 			local s = settings.showSource and ' ('..source..')' or ''
 			local c, m = args:match(patterns.PRIVMSG)
 			local chan = c
-			--if c == nick then c = ' wrote you'
-			--else c = '' end
 			
 			return n..': '..m, chan, n, m, c
 			
@@ -122,14 +101,10 @@ local socket = require("socket")
 sendMessage = function(str)
 
 	if str:sub(1) == '/' and not (str:sub(2) == '/') then
-	
-		--pattern
 		
 	end
 	
 	irc:send(': PRIVMSG '..channel..' :'..str..'\r\n')
-	
-	--print(nick .. ': ' .. str)
 	
 	return str
 	
@@ -146,128 +121,36 @@ end
 
 
 function love.load()
-
---	print(string.byte('è', 1, #('è')))
-
-	--require 'repler'.load''
 	
-	--require 'loveframes'
+	love.graphics.setCaption("LoveBot IRC BOT")
+	print("LoveBot IRC BOT is running!")
+	irc = socket.tcp()
 	
-	--love.frames = loveframes
-	
-	--loveframes.util.SetActiveSkin "Silver"
-	
-	--frame = love.frames.Create 'frame'
-	
-	--frame:SetSize(800, 600)
-	
-	--frame:Center()
-	
-	--tabs = love.frames.Create('tabs', frame)
-	
-	--tabs:SetPos(4, 4)
-	
-	--tabs:SetSize(792, 562)
-	
-	--local loveIRC = love.frames.Create('list', frame)
-	
-	--loveIRC:SetAutoScroll(true)
-	
-	--tabs:AddTab('#love', loveIRC, '#love')
-	
-	--tabsList = {}
-	
-	--tabsList['#love'] = {id = 1, list = loveIRC}
-	
-	--tabsList.len = 1
-	
-	--messageBar = love.frames.Create('textinput', frame)
-	
-	--messageBar:SetPos(4, 600-32)
-	
-	--messageBar:SetWidth(800-8)
-	
-	--messageBar.OnEnter = function(self, text)
-	
-	--	sendMessage(text)
-	--	self:Clear()
-		
-	--end
-	
-	love.graphics.setCaption("LoveBot IRC BOT") -- yeah
-	print("LoveBot IRC BOT is running!") -- oh yeah
-	irc = socket.tcp() -- now let's actually bother with networking code
-	
-	
-	-- CONFIGURATION
 	uname = "Nicola"
 	nick = "Nixbot"
 	address = "irc.oftc.net"
 	port = 6667
 	channel = "#nixtests"
 	
-	-- now connect to the server
 	local ok = irc:connect(address,port)
-	-- what do you THINK this does
+
 	if ok == 1 then
 		print("Connected to the network!")
 	else
 		print("Couldn't connect!")
 	end
 	
-	irc:send("NICK "..nick.."\r\n") -- set a nickname
+	irc:send("NICK "..nick.."\r\n")
 	irc:send("USER "..uname.." 8 * :"..uname.."\r\n")
-	--socket.sleep(2.0) -- delay a bit
-	irc:send("JOIN "..channel.."\r\n") -- now join a channel
-	irc:settimeout(0) -- yeah
+	irc:send("JOIN "..channel.."\r\n")
+	irc:settimeout(0)
 end
 
---function love.update(dt)
-	while true do
-	-- process data
+while true do
 	local line, err = irc:receive("*l")
 	process(line)
-	-- that was easy
-	--loveframes.update(dt)
-	end
 
---function love.draw()
-	-- SHAMELESS PLUGGING
-	--love.graphics.print("I didn't put anything here.\nDraw stuff here!\nYour choice!\nI'm not you, so do something!",0,0)
-	--love.graphics.print("Created by NightKawata!\nSupport his work!",0,195)
-	--loveframes.draw()
---end
-
---function love.keypressed(k, u)
-	--if k == "escape" then
-	--	love.event.push("quit")
-	--end
-	--loveframes.keypressed(k, u)
---end
-
---function love.keyreleased(k, u)
-
-	--loveframes.keyreleased(k, u)
-	
---end
-
---function love.mousepressed(x, y, b)
-
-	--loveframes.mousepressed(x, y, b)
-	
---end
-
---function love.mousereleased(x, y, b)
-
-	--loveframes.mousereleased(x, y, b)
-	
---end
-
---love.quit = function()
-
-	--irc:send ": QUIT :Reboot routine initiated\r\n"
-	
---end
+end
 
 masters = {
 bartbes = 0,
@@ -315,11 +198,9 @@ mathEnv = math
 local scp = "(.-) (.+)"
 local com = {
 	poke = function(nick, source, target)
-		--print(target)
 		if not (target == channel) then return end
 		if nick:find ' ' then sendNotice('Did you want to provide me a nickname with spaces? F**k off!', source) return end
 		sendMessage('\001ACTION '..pokeSentences[math.random(#pokeSentences)]:format(nick)..'\001')
-		--irc:send(": ACTION :"..pokeSentences[math.random(#pokeSentences)]:format(nick).."$")
 		
 	end,
 	quit = function(_, source)
@@ -468,21 +349,16 @@ setmetatable(com, com)
 		
 
 function process(lerp)
-	-- SHAMELESS ALGORITHIM
-	if lerp ~= nil then --print(lerp)
+	if lerp ~= nil then
 		local l = lerp:find("PING")
-		if l and l == 1 then -- if the bot gets pinged
-			local x = lerp -- get the message so we also know which server
-			x = string.gsub(x,"PING","PONG",1) -- now replace ping with pong ONLY ONCE
-			irc:send(x.."\r\n") -- send it back
-			--print(x) --I used that to make sure it worked
+		if l and l == 1 then
+			local x = lerp
+			x = string.gsub(x,"PING","PONG",1)
+			irc:send(x.."\r\n")
 			return
 		end
 		local MSG, chan, source, rawmsg, target = parse(lerp)
-		
-		--if source == 'josePHPagoda' then sendMessage "JesseH" end
-		
-		--
+
 		if ((not settings.Master) or (settings.Master and masters[source])) and not ignored[source] then
 		
 			rawmsg = rawmsg or ''
@@ -499,7 +375,6 @@ function process(lerp)
 				
 				c = c or rawmsg
 				
-				--pcall(com[c], rawmsg2, source)
 				com[c](rawmsg2, source, target)
 				
 			else print(i) end
@@ -510,24 +385,6 @@ function process(lerp)
 		if chan == nick then chan = source end
 		
 		if not chan then chan = 'nochan' end
-		
-		--[[if not tabsList[chan] then
-		
-			local list = love.frames.Create('list', frame)
-			list:SetAutoScroll(true)
-			tabs:AddTab(chan, list, chan)
-		
-			tabsList[chan] = {id = tabsList.len+1, list = list}
-			
-			tabsList.len = tabsList.len + 1
-			
-		end
-		
-		local text = love.frames.Create('text', frame)
-			
-		text:SetText(MSG)
-		
-		tabsList[chan].list:AddItem(text)--]]
 			
 	end
 end
