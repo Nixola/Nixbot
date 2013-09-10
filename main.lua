@@ -151,48 +151,48 @@ function love.load()
 
 	--require 'repler'.load''
 	
-	require 'loveframes'
+	--require 'loveframes'
 	
-	love.frames = loveframes
+	--love.frames = loveframes
 	
-	loveframes.util.SetActiveSkin "Silver"
+	--loveframes.util.SetActiveSkin "Silver"
 	
-	frame = love.frames.Create 'frame'
+	--frame = love.frames.Create 'frame'
 	
-	frame:SetSize(800, 600)
+	--frame:SetSize(800, 600)
 	
-	frame:Center()
+	--frame:Center()
 	
-	tabs = love.frames.Create('tabs', frame)
+	--tabs = love.frames.Create('tabs', frame)
 	
-	tabs:SetPos(4, 4)
+	--tabs:SetPos(4, 4)
 	
-	tabs:SetSize(792, 562)
+	--tabs:SetSize(792, 562)
 	
-	local loveIRC = love.frames.Create('list', frame)
+	--local loveIRC = love.frames.Create('list', frame)
 	
-	loveIRC:SetAutoScroll(true)
+	--loveIRC:SetAutoScroll(true)
 	
-	tabs:AddTab('#love', loveIRC, '#love')
+	--tabs:AddTab('#love', loveIRC, '#love')
 	
-	tabsList = {}
+	--tabsList = {}
 	
-	tabsList['#love'] = {id = 1, list = loveIRC}
+	--tabsList['#love'] = {id = 1, list = loveIRC}
 	
-	tabsList.len = 1
+	--tabsList.len = 1
 	
-	messageBar = love.frames.Create('textinput', frame)
+	--messageBar = love.frames.Create('textinput', frame)
 	
-	messageBar:SetPos(4, 600-32)
+	--messageBar:SetPos(4, 600-32)
 	
-	messageBar:SetWidth(800-8)
+	--messageBar:SetWidth(800-8)
 	
-	messageBar.OnEnter = function(self, text)
+	--messageBar.OnEnter = function(self, text)
 	
-		sendMessage(text)
-		self:Clear()
+	--	sendMessage(text)
+	--	self:Clear()
 		
-	end
+	--end
 	
 	love.graphics.setCaption("LoveBot IRC BOT") -- yeah
 	print("LoveBot IRC BOT is running!") -- oh yeah
@@ -222,51 +222,52 @@ function love.load()
 	irc:settimeout(0) -- yeah
 end
 
-function love.update(dt)
+--function love.update(dt)
+	while true do
 	-- process data
 	local line, err = irc:receive("*l")
 	process(line)
 	-- that was easy
-	loveframes.update(dt)
-end
+	--loveframes.update(dt)
+	end
 
-function love.draw()
+--function love.draw()
 	-- SHAMELESS PLUGGING
 	--love.graphics.print("I didn't put anything here.\nDraw stuff here!\nYour choice!\nI'm not you, so do something!",0,0)
 	--love.graphics.print("Created by NightKawata!\nSupport his work!",0,195)
-	loveframes.draw()
-end
+	--loveframes.draw()
+--end
 
-function love.keypressed(k, u)
-	if k == "escape" then
-		love.event.push("quit")
-	end
-	loveframes.keypressed(k, u)
-end
+--function love.keypressed(k, u)
+	--if k == "escape" then
+	--	love.event.push("quit")
+	--end
+	--loveframes.keypressed(k, u)
+--end
 
-function love.keyreleased(k, u)
+--function love.keyreleased(k, u)
 
-	loveframes.keyreleased(k, u)
+	--loveframes.keyreleased(k, u)
 	
-end
+--end
 
-function love.mousepressed(x, y, b)
+--function love.mousepressed(x, y, b)
 
-	loveframes.mousepressed(x, y, b)
+	--loveframes.mousepressed(x, y, b)
 	
-end
+--end
 
-function love.mousereleased(x, y, b)
+--function love.mousereleased(x, y, b)
 
-	loveframes.mousereleased(x, y, b)
+	--loveframes.mousereleased(x, y, b)
 	
-end
+--end
 
-love.quit = function()
+--love.quit = function()
 
 	--irc:send ": QUIT :Reboot routine initiated\r\n"
 	
-end
+--end
 
 masters = {
 bartbes = 0,
@@ -314,7 +315,7 @@ mathEnv = math
 local scp = "(.-) (.+)"
 local com = {
 	poke = function(nick, source, target)
-		print(target)
+		--print(target)
 		if not (target == channel) then return end
 		if nick:find ' ' then sendNotice('Did you want to provide me a nickname with spaces? F**k off!', source) return end
 		sendMessage('\001ACTION '..pokeSentences[math.random(#pokeSentences)]:format(nick)..'\001')
@@ -510,7 +511,7 @@ function process(lerp)
 		
 		if not chan then chan = 'nochan' end
 		
-		if not tabsList[chan] then
+		--[[if not tabsList[chan] then
 		
 			local list = love.frames.Create('list', frame)
 			list:SetAutoScroll(true)
@@ -526,7 +527,7 @@ function process(lerp)
 			
 		text:SetText(MSG)
 		
-		tabsList[chan].list:AddItem(text)
+		tabsList[chan].list:AddItem(text)--]]
 			
 	end
 end
