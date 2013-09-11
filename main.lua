@@ -195,7 +195,7 @@ pokeSentences = {
 
 mathEnv = math
 
-local scp = "(.-) (.+)"
+local scp = "(.-) *(.+) *"
 local com = {
 	poke = function(nick, source, target)
 		if not (target == channel) then return end
