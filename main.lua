@@ -13,86 +13,86 @@ patterns = {
 commands = {
 
 	received = {
-	
+
 		JOIN = function(nick, source, arg)
-		
+
 			local s = settings.showSource and ' ('..source..')' or ''
-			
+
 			local chan = arg:match(patterns.JOIN)
-		
+
 			return nick..s..' has joined '..chan, chan, nick
-			
+
 		end,
-		
+
 		PART = function(nick, source, args)
-		
+
 			local s = settings.showSource and ' ('..source..')' or ''
 			local chan, r = args:match(patterns.PART)
 			if #r > 0 then r = ' ('..r..')' end
-			
+
 			return nick..s..' has left the channel'..r, chan, nick
-			
+
 		end,
-		
+
 		PRIVMSG = function(n, source, args)
-		
+
 			local s = settings.showSource and ' ('..source..')' or ''
 			local c, m = args:match(patterns.PRIVMSG)
 			local chan = c
-			
+
 			return n..': '..m, chan, n, m, c
-			
+
 		end,
-		
+
 		QUIT = function(nick, source, arg)
-		
+
 			local s = settings.showSource and ' ('..source..')' or ''
 			local r = arg:match(patterns.QUIT)
 			if #r > 0 then r = ' ('..r..')' end
-			
+
 			return nick..s..' has left IRC'..r, nick
-			
+
 		end,
-		
+
 		NICK = function(n, source, arg)
-		
+
 			local s = settings.showSource and ' ('..source..')' or ''
 			if n == nick then nick = arg; u = 'You' else u = n end
-			
+
 			return u..s..' changed nick to '..arg, nick
-			
+
 		end,
-		
+
 		NOTICE = function(n, source, arg)
-		
+
 			local s = settings.showSource and ' ('..source..')' or ''
 			local t, m = arg:match(patterns.NOTICE)
 			local no
 			if t == nick then no = 'NOTICE: '
 			else no = 'CHANNEL NOTICE: ' end
-			
+
 			return no..n..s..': '..m, t, nick
-			
+
 		end
-		
+
 	}
-	
+
 }
 
 parse = function(msg)
 
 	local sender, source, command, args = msg:match(incomingPattern)
-	
+
 	if not sender or not source or not command then return msg end
-	
-	print(sender)
-	print(source)
-	print(args)
-	
+
+	print(sender..'|'..args..'\n')
+	--print(source)
+	--print(args)
+
 	if commands.received[command] then return commands.received[command](sender, source, args) end
-		
+
 	return msg
-		
+
 end
 
 
@@ -101,56 +101,47 @@ local socket = require("socket")
 sendMessage = function(str)
 
 	if str:sub(1) == '/' and not (str:sub(2) == '/') then
-		
+
 	end
-	
+
 	irc:send(': PRIVMSG '..channel..' :'..str..'\r\n')
-	
+
 	return str
-	
+
 end
 
 
 sendNotice = function(str, target)
 
 	irc:send(': NOTICE '..target..' :'..str..'\r\n')
-	
+
 	return str
-	
-end
-
-
-function love.load()
-	
-	love.graphics.setCaption("LoveBot IRC BOT")
-	print("LoveBot IRC BOT is running!")
-	irc = socket.tcp()
-	
-	uname = "Nicola"
-	nick = "Nixbot"
-	address = "irc.oftc.net"
-	port = 6667
-	channel = "#nixtests"
-	
-	local ok = irc:connect(address,port)
-
-	if ok == 1 then
-		print("Connected to the network!")
-	else
-		print("Couldn't connect!")
-	end
-	
-	irc:send("NICK "..nick.."\r\n")
-	irc:send("USER "..uname.." 8 * :"..uname.."\r\n")
-	irc:send("JOIN "..channel.."\r\n")
-	irc:settimeout(0)
-end
-
-while true do
-	local line, err = irc:receive("*l")
-	process(line)
 
 end
+
+
+
+print("LoveBot IRC BOT is running!")
+irc = socket.tcp()
+
+uname = "Nicola"
+nick = "Nixbot"
+address = "irc.oftc.net"
+port = 6667
+channel = "#nixtests"
+
+local ok = irc:connect(address,port)
+
+if ok == 1 then
+	print("Connected to the network!")
+else
+	print("Couldn't connect!")
+end
+
+irc:send("NICK "..nick.."\r\n")
+irc:send("USER "..uname.." 8 * :"..uname.."\r\n")
+irc:send("JOIN "..channel.."\r\n")
+irc:settimeout(0)
 
 masters = {
 bartbes = 0,
@@ -183,7 +174,6 @@ helpStr = {
 "!help: sends this message as a notice to who calls it."}
 
 pokeSentences = {
-'got %s laid',
 'pokes %s in the eye with a stick.',
 'slaps %s with a loaf of bread.',
 'feeds %s with laxative and glass dust',
@@ -195,18 +185,18 @@ pokeSentences = {
 
 mathEnv = math
 
-local scp = "(.-) *(.+) *"
+local scp = "(.-)%s+(.+)%s*"
 local com = {
 	poke = function(nick, source, target)
 		if not (target == channel) then return end
 		if nick:find ' ' then sendNotice('Did you want to provide me a nickname with spaces? F**k off!', source) return end
 		sendMessage('\001ACTION '..pokeSentences[math.random(#pokeSentences)]:format(nick)..'\001')
-		
+
 	end,
 	quit = function(_, source)
 		if masters[source] then
 			irc:send ": QUIT :Obeying my master\r\n"
-			love.event.quit()
+			os.exit()
 		else
 			sendNotice("Do you think you can just tell me to quit?", source)
 		end
@@ -334,6 +324,22 @@ local com = {
 			irc:send(": PRIVMSG "..target.." :"..message.."\n\r")
 		end
 	end,
+	lua = function(code, source, target)
+		local f = io.open('code.lua', 'w')
+		f:write(code)
+		f:close()
+		os.execute("ulimit -t 1 && lua -l sandbox code.lua > out 2>&1")
+		f = io.open("out", 'r')
+		local t = f:read '*a'
+		f:close()
+		t = t:gsub('\n', '; ')
+		if #t > 400 then t = t:sub(1, 395)..'[...]' end
+		t = source..': '..t
+		if target == channel then sendMessage(t)
+		else sendNotice(t, source)
+		end
+		-- body
+	end,
 	help = function(_, source)
 		if _ and #_>0 and source == "Nix" then source = _ end
 		for i, v in ipairs(helpStr) do sendNotice(v, source) end
@@ -342,11 +348,11 @@ local com = {
 		return function(_, source)
 			sendNotice("This command doesn't exist! Why don't you mess with somebot else?", source)
 		end
-		
+
 	end}
-	
+
 setmetatable(com, com)
-		
+
 
 function process(lerp)
 	if lerp ~= nil then
@@ -360,7 +366,7 @@ function process(lerp)
 		local MSG, chan, source, rawmsg, target = parse(lerp)
 
 		if ((not settings.Master) or (settings.Master and masters[source])) and not ignored[source] then
-		
+
 			rawmsg = rawmsg or ''
 			if rawmsg:lower() == 'nixbot!' then sendMessage("I like you, "..tostring(source)..'!') elseif
 			   rawmsg:lower() == 'circuloid!' then sendMessage "I'm nicer than him!" elseif
@@ -368,23 +374,33 @@ function process(lerp)
 			local i = rawmsg:sub(1, 1)
 			local j = rawmsg:sub(2, 2)
 			if i == '!' and not (j == '!' or j == '')then
-			
+
 				rawmsg = rawmsg:sub(2, -1)
-				
+
 				local c, rawmsg2 = rawmsg:match(scp)
-				
+
 				c = c or rawmsg
-				
+				rawmsg2 = rawmsg2 or ''
+
+				--print('|'..c..'|', '|'..rawmsg2..'|')
+
 				com[c](rawmsg2, source, target)
-				
-			else print(i) end
-			
+
+			end
+
 		end
 		--
-		
+
 		if chan == nick then chan = source end
-		
+
 		if not chan then chan = 'nochan' end
-			
+
 	end
+end
+
+
+while true do
+	local line, err = irc:receive("*l")
+	process(line)
+
 end
