@@ -58,12 +58,6 @@ commands = {
 				f:close()
 			end
 
-			if target == bot.channel and message and nick then
-
-				--table.insert(messages, '<'..nick..'> '..message)
-
-			end
-
 			return target, nick, message
 
 		end,
@@ -379,24 +373,30 @@ local com = {
 			if not f then
 				sendNotice("I'm sorry for disappointing you, my master. I could not open the file. "..err, source)
 			else
-				for i, v in ipairs(messages) do f:write(v) f:write '\n' end
+				for i, v in ipairs(messages) do f:write('<'..v[1]..'> '..v[2]) f:write '\n' end
 				f:close()
 			end
 		end
 		return true
 	end,
 	s = function(query, source, target)
-		local pattern, out = query:match "^(.+)%s+(.+)$"
+		local pattern, out = query:match "^(.-)%s+(.+)"
+		print(pattern, out)
 		if not pattern then pattern = query end
 		if pattern == '' then 
 			sendNotice("Hey! This is invalid! Fix it!", source)
 		else
 			for i = #messages, 1, -1 do
 				local v = messages[i]
-				local success, result = pcall(string.match, v, pattern)
+				local success, result = pcall(string.match, v[2], pattern)
 				if not success then sendNotice('Nice try. '..result, source) return end
 				if result then
-					sendMessage(v:gsub(pattern, out or ''))
+					local succ, res = pcall(string.gsub, v[2], pattern, out or '')
+					if not succ then
+						sendNotice('Nice try. '..res, source)
+					else
+						sendMessage('<'..source..'> '..res)
+					end
 					return
 				end
 			end
@@ -451,7 +451,7 @@ function process(lerp)
 			end
 
 			if r or source == bot.nick or not source then return end
-			table.insert(messages, '<'..source..'> '..rawmsg)
+			table.insert(messages, {source, rawmsg})
 		end
 	end
 end
