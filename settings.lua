@@ -11,3 +11,11 @@ Nix = 0
 }
 
 ignored = {}
+
+bot = {
+	uname = "Nixbot",
+	nick = "Nixbot",
+	address = "irc.oftc.net",
+	port = 6667,
+	channel = "#novaember"
+}

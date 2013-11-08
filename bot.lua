@@ -9,6 +9,8 @@ patterns = {
 	NOTICE = '(%S+)%s%:(.*)'
 }
 
+messages = {}
+
 urlify = function(str)
   if (str) then
     str = string.gsub (str, "\n", "\r\n")
@@ -49,11 +51,17 @@ commands = {
 
 			local s = settings.showSource and ' ('..source..')' or ''
 			local target, message = args:match(patterns.PRIVMSG)
-			if not (target == channel) then
+			if not (target == bot.channel) then
 				local f = io.open('logs/'..nick, 'a')
 				f:write(message)
 				f:write '\n'
 				f:close()
+			end
+
+			if target == bot.channel and message and nick then
+
+				--table.insert(messages, '<'..nick..'> '..message)
+
 			end
 
 			return target, nick, message
@@ -119,9 +127,9 @@ end
 
 sendMessage = function(str)
 
-	irc:send(': PRIVMSG '..channel..' :'..str..'\r\n')
+	irc:send(': PRIVMSG '..bot.channel..' :'..str..'\r\n')
 
-	print(nick..'|'..channel..' :'..str..'\n')
+	print(bot.nick..'|'..bot.channel..' :'..str..'\n')
 
 	return str
 
@@ -170,10 +178,10 @@ local mathEnv = math
 local scp = "(.-)%s+(.+)%s*"
 local com = {
 	poke = function(nick, source, target)
-		if not (target == channel) then return end
+		if not (target == bot.channel) then return end
 		if nick:find ' ' then sendNotice('Did you want to provide me a nickname with spaces? F**k off!', source) return end
 		sendMessage('\001ACTION '..pokeSentences[math.random(#pokeSentences)]:format(nick)..'\001')
-
+		return true
 	end,
 	quit = function(_, source)
 		if masters[source] then
@@ -182,14 +190,16 @@ local com = {
 		else
 			sendNotice("Do you think you can just tell me to quit?", source)
 		end
+		return true
 	end,
-	restart = function(_, source)
+	reboot = function(_, source)
 		if masters[source] then
 			irc:send ": QUIT :Rebooting\r\n"
 			reload = true
 		else
 			sendNotice("Do you think you can just tell me to reboot?", source)
 		end
+		return true
 	end,
 	reload = function(_, source)
 		if masters[source] then
@@ -198,6 +208,7 @@ local com = {
 		else
 			sendNotice("Nope.", source)
 		end
+		return true
 	end,
 	lock = function(_, source)
 		if masters[source] then
@@ -210,11 +221,13 @@ local com = {
 		else
 			sendNotice("You're not my master! You won't control me!", source)
 		end
+		return true
 	end,
 	free = function(_, source)
 		if not settings.Master then return end
 		sendNotice("As you wish, my master. I will listen to everyone now.", source)
 		settings.Master = false
+		return true
 	end,
 	obey = function(nick, source)
 		if masters[source] then
@@ -227,6 +240,7 @@ local com = {
 		else
 			sendNotice("You're not my master! You won't control me!", source)
 		end
+		return true
 	end,
 	disobey = function(nick, source)
 		if masters[source] == 0 then
@@ -241,19 +255,21 @@ local com = {
 		else
 			sendNotice("You're not my master! You won't control me!", source)
 		end
+		return true
 	end,
 	join = function(chan, source)
 		if masters[source] then
 			if chan:find '#' == 1 and not chan:find ' ' then
-				irc:send(": PART "..channel.." :The Master ordered.\r\n")
+				irc:send(": PART "..bot.channel.." :The Master ordered.\r\n")
 				irc:send(": JOIN "..chan.." :\r\n")
-				channel = chan
+				bot.channel = chan
 			else
 				sendNotice("Invalid channel! Am I supposed to guess it or what?", source)
 			end
 		else
 			sendNotice("You're not my master! You won't control me!", source)
 		end
+		return true
 	end,
 	secret = function(_, source)
 		if source == "Nix" then
@@ -261,6 +277,7 @@ local com = {
 			ignored.Nix = false
 			sendNotice("You're my only true master, Nix. I won't ever trust anyone else.", source)
 		end
+		return true
 	end,
 	ignore = function(nick, source)
 		if masters[source] then
@@ -273,6 +290,7 @@ local com = {
 		else
 			sendNotice("You're not my master! You won't control me!", source)
 		end
+		return true
 	end,
 	listen = function(nick, source)
 		if masters[source] then
@@ -285,6 +303,7 @@ local com = {
 		else
 			sendNotice("You're not my master! You won't control me!", source)
 		end
+		return true
 	end,
 	math = function(code, source, target)
 		if not code or #code == 0 then sendNotice("Do you want me to guess the expression you wanna know the result of?", source) return end
@@ -303,25 +322,27 @@ local com = {
 			return
 		end
 		if #results == 2 then
-			if target == channel then
+			if target == bot.channel then
 				sendMessage("The result of your expression is: "..tostring(results[2])..".")
 			else
 				sendNotice("The result of your expression is: "..tostring(results[2])..".", source)
 			end
 		else 
 			table.remove(results, 1)
-			if target == channel then
+			if target == bot.channel then
 				sendMessage("The results of your expressions are: " .. table.concat(results, ', ') .. ".")
 			else
 				sendNotice("The results of your expressions are: " .. table.concat(results, ', ') .. ".", source)
 			end
 		end
+		return true
 	end,
 	tell = function(args, source)
 		if masters[source] then
 			local target, message = args:match(scp)
 			irc:send(": PRIVMSG "..target.." :"..message.."\n\r")
 		end
+		return true
 	end,
 	lua = function(code, source, target)
 		local f = io.open('code.lua', 'w')
@@ -334,21 +355,57 @@ local com = {
 		t = t:gsub('\n', '; ')
 		if #t > 400 then t = t:sub(1, 395)..'[...]' end
 		t = source..': '..t
-		if target == channel then sendMessage(t)
+		if target == bot.channel then sendMessage(t)
 		else sendNotice(t, source)
 		end
+		return true
 	end,
-	google = function(query, target, source)
+	google = function(query, source, target)
 		local q = urlify(query)
-		if target == channel then
+		if not q then sendNotice("Give me a valid string to search!", source) end
+		if target == bot.channel then
 			sendMessage(source..": http://lmgtfy.com/?q="..q)
 		else
-			sendNotice(source..": http://lmgtfy.com/?q="..q, source)
+			sendNotice("http://lmgtfy.com/?q="..q, source)
 		end
+		return true
+	end,
+	export = function(_, source)
+		if masters[source] then
+			if _ == 'clear' then messages = {} return end
+			local f, err = io.open('logs/export', 'w')
+			if not f then
+				sendNotice("I'm sorry for disappointing you, my master. I could not open the file. "..err, source)
+			else
+				for i, v in ipairs(messages) do f:write(v) f:write '\n' end
+				f:close()
+			end
+		end
+		return true
+	end,
+	s = function(query, source, target)
+		local pattern, out = query:match "^(.+)%s+(.+)$"
+		if not pattern then pattern = query end
+		if pattern == '' then 
+			sendNotice("Hey! This is invalid! Fix it!", source)
+		else
+			for i = #messages, 1, -1 do
+				local v = messages[i]
+				local success, result = pcall(string.match, v, pattern)
+				if not success then sendNotice('Nice try. '..result, source) return end
+				if result then
+					sendMessage(v:gsub(pattern, out or ''))
+					return
+				end
+			end
+			sendNotice("No message matching your query was found.", source)
+		end
+		return true
 	end,
 	help = function(_, source)
 		if _ and #_>0 and source == "Nix" then source = _ end
 		for i, v in ipairs(helpStr) do sendNotice(v, source) end
+		return true
 	end,
 	__index = function(_, _, _, source)
 		return function(_, source)
@@ -371,10 +428,12 @@ function process(lerp)
 		end
 		local chan, source, rawmsg = parse(lerp)
 
+		local r
+
 		if ((not settings.Master) or (settings.Master and masters[source])) and not ignored[source] then
 
 			rawmsg = rawmsg or ''
-			if rawmsg:lower() == nick:lower()..'!' then sendMessage(source..'!') elseif
+			if rawmsg:lower() == bot.nick:lower()..'!' then sendMessage(source..'!') elseif
 			   rawmsg:lower() == 'circuloid!' then sendMessage "I'm nicer than him!" end
 			local i = rawmsg:sub(1, 1)
 			local j = rawmsg:sub(2, 2)
@@ -386,16 +445,11 @@ function process(lerp)
 
 				c = c or rawmsg
 
-				com[c](rawmsg2, source, chan)
-
+				local r = com[c](rawmsg2, source, chan)
 			end
 
+			if r or source == bot.nick then return end
+			table.insert(messages, '<'..source..'> '..rawmsg)
 		end
-		--
-
-		if chan == nick then chan = source end
-
-		if not chan then chan = 'nochan' end
-
 	end
 end

@@ -9,13 +9,7 @@ load = function()
 
 	irc = socket.tcp()
 
-	uname = "Nicola"
-	nick = "Nixbot"
-	address = "irc.oftc.net"
-	port = 6667
-	channel = "#nixtests"
-
-	local ok = irc:connect(address,port)
+	local ok = irc:connect(bot.address,bot.port)
 
 	if ok == 1 then
 		print("Connected to the network!")
@@ -23,9 +17,9 @@ load = function()
 		print("Couldn't connect!")
 	end
 
-	irc:send("NICK "..nick.."\r\n")
-	irc:send("USER "..uname.." 8 * :"..uname.."\r\n")
-	irc:send("JOIN "..channel.."\r\n")
+	irc:send("NICK "..bot.nick.."\r\n")
+	irc:send("USER "..bot.uname.." 8 * :"..bot.uname.."\r\n")
+	irc:send("JOIN "..bot.channel.."\r\n")
 	irc:settimeout(0)
 
 	update()
