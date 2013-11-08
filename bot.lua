@@ -448,7 +448,7 @@ function process(lerp)
 				local r = com[c](rawmsg2, source, chan)
 			end
 
-			if r or source == bot.nick then return end
+			if r or source == bot.nick or not source then return end
 			table.insert(messages, '<'..source..'> '..rawmsg)
 		end
 	end
