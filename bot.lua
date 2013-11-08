@@ -173,6 +173,8 @@ pokeSentences = {
 'uninstalled LÖVE from %s\'s PC',
 'installed Windows Vista on %s\'s pc'}
 
+math.math = math
+
 local mathEnv = math
 
 local scp = "(.-)%s+(.+)%s*"
@@ -445,7 +447,7 @@ function process(lerp)
 
 				c = c or rawmsg
 
-				local r = com[c](rawmsg2, source, chan)
+				r = com[c](rawmsg2, source, chan)
 			end
 
 			if r or source == bot.nick or not source then return end
