@@ -1,6 +1,6 @@
 local socket = require("socket")
-require 'settings'
-require 'bot'
+dofile 'settings.lua'
+dofile 'bot.lua'
 
 
 print("LoveBot IRC BOT is running!")

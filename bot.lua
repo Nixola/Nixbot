@@ -11,6 +11,16 @@ patterns = {
 
 messages = {}
 
+reply = function(source, target, message)
+
+	if target == bot.channel then
+		sendMessage(source..": "..message)
+	else
+		sendNotice(message, source)
+	end
+
+end
+
 urlify = function(str)
   if (str) then
     str = string.gsub (str, "\n", "\r\n")
@@ -49,14 +59,7 @@ commands = {
 
 		PRIVMSG = function(nick, source, args)
 
-			local s = settings.showSource and ' ('..source..')' or ''
 			local target, message = args:match(patterns.PRIVMSG)
-			if not (target == bot.channel) then
-				local f = io.open('logs/'..nick, 'a')
-				f:write(message)
-				f:write '\n'
-				f:close()
-			end
 
 			return target, nick, message
 
@@ -119,11 +122,13 @@ parse = function(msg)
 
 end
 
-sendMessage = function(str)
+sendMessage = function(str, target)
 
-	irc:send(': PRIVMSG '..bot.channel..' :'..str..'\r\n')
+	target = target or bot.channel
 
-	print(bot.nick..'|'..bot.channel..' :'..str..'\n')
+	irc:send(': PRIVMSG '..target..' :'..str..'\r\n')
+
+	print(bot.nick..'|'..target..' :'..str..'\n')
 
 	return str
 
@@ -132,7 +137,7 @@ end
 
 sendNotice = function(str, target)
 
-	irc:send(': NOTICE '..target..' :'..str..'\r\n')
+	irc:send(': NOTICE '..target..' :'..(str or 'empty string?')..'\r\n')
 
 	return str
 
@@ -140,22 +145,30 @@ end
 
 
 helpStr = {
-"Nixbot is a single channel IRC bot made with LÖVE (http://love2d.org) based on Kawata's code that uses Nikolai Resokav's (http://nikolairesokav.com) LoveFrames as GUI.",
-"It will answer to the sentences \"Nixbot!\", \"Bots!\" and \"Circuloid!\", as well as some commands that I'm about to list.",
-"Some of those commands can only be used by a Master. Every LÖVE developer is recognized as a Rank 0 master, as well as me.",
+--"Nixbot is a single channel IRC bot made with LÖVE (http://love2d.org) based on Kawata's code.",
+--"It will answer to the messages \"Nixbot!\" and \"Circuloid!\", as well as some commands that I'm about to list.",
+"Some of these commands can only be used by a Master. Every LÖVE developer is recognized as a Rank 0 master, as well as me.",
 "If a command requires a Master, it will accept any master. If it requires a Rank 0 Master, it has to be a hardcoded one.",
-"There's currently no way to add a Rank 0 master in runtime and I don't want to add one, even though it would be easy.",
-"!poke nick: sends a mean CTCP ACTION command which has nick as object (e.g: Nixbot installed Windows Vista on Nixola's PC).",
-"!quit: shuts the bot down. A Master is required.",
-"!lock: locks the bot, so that it will ignore every message but Masters' ones. A Master is required.",
-"!free: unlocks the bot, so that it will parse everyone's messages again.",
-"!obey nick: makes nick a Rank 1 Master. A Master is required.",
-"!disobey nick: revokes the Master status on nick. A Rank 0 Master is required.",
-"!join channel: makes the bot part from the current channel to join a new one. A Master is required.",
-"!ignore nick: makes the bot ignore every nick's message until !listen nick is used. A Master is required.",
-"!listen nick: makes the bot listen again to an ignored user. A Master is required.",
-"!math expression[, expressions]: makes the bot evaluate expression (or the expressions) and send either a message or a notice with the result[s].",
-"!help: sends this message as a notice to who calls it."}
+--"There's currently no way to add a Rank 0 master in runtime and I don't want to add one, even though it would be easy.",
+"Commands: !12poke, !12quit, !12lock, !12free, !12obey, !12disobey, !12join, !12ignore, !12listen, !12math, !12lua, !12google, !12s, !12cookie.",
+"Run !help command to get informations about it.",
+poke = {"!12poke <3nick>: sends a mean CTCP ACTION command which has nick as object (e.g: Nixbot installed Windows Vista on Nixola's PC)."},
+quit = {"!12quit: shuts the bot down. A Master is required."},
+lock = {"!12lock: locks the bot, so that it will ignore every message but Masters' ones. A Master is required."},
+free = {"!12free: unlocks the bot, so that it will parse everyone's messages again."},
+obey = {"!12obey <3nick>: makes nick a Rank 1 Master. A Master is required."},
+disobey = {"!12disobey <3nick>: revokes the Master status on nick. A Rank 0 Master is required.",},
+join = {"!12join <3channel>: makes the bot part from the current channel to join a new one. A Master is required.",},
+ignore = {"!12ignore <3nick>: makes the bot ignore every nick's message until !listen nick is used. A Master is required.",},
+listen = {"!12listen <3nick>: makes the bot listen again to an ignored user. A Master is required.",},
+math = {"!12math <3expression> <4[, expressions]>: makes the bot evaluate expression (or the expressions) and send either a message or a notice with the result[s].",},
+lua = {"!12lua <3code>: runs sandboxed and ulimit(-t 1)ed Lua code, printing or noticing the result.",},
+google = {"!12google <3something>: too lazy to google for something? Let Nixbot google that for you!",},
+s = {"!12s <3Lua pattern> <4string>: iterates backwards through the received messages, :gsub(pattern,string)ing the first appropriate one.",},
+cookie = {"!12cookie <3action> <4element> <5[param]> Cookie is a shamelessly limited copy of Orteil's Cookie Clicker. 3Action and 4Element can be null (!12cookie), in which case you gain a cookie and get a list of your buildings.",
+		  "Actions: 3cps, takes no arguments, shows how many cookies you bake per second; 3buy: takes an element, which is a building, and tries to buy it with the available cookies; 3price: takes an element, which is a building, and shows you its price, or lists the price of the buildings if <4Element> is null.",
+		  "Note: 3buy can take another parameter (!12cookie 3buy <4building> <5[param]>), which is either 'all' or a number. It represents how many buildings of that kind to buy, with 'all' buying them until you're out of cookies. For a list of available buildings, use \"!12cookie 3buy\"."}
+}
 
 pokeSentences = {
 'pokes %s in the eye with a stick.',
@@ -172,7 +185,7 @@ math.math = math
 local mathEnv = math
 
 local scp = "(.-)%s+(.+)%s*"
-local com = {
+com = {
 	poke = function(nick, source, target)
 		if not (target == bot.channel) then return end
 		if nick:find ' ' then sendNotice('Did you want to provide me a nickname with spaces? F**k off!', source) return end
@@ -318,18 +331,10 @@ local com = {
 			return
 		end
 		if #results == 2 then
-			if target == bot.channel then
-				sendMessage("The result of your expression is: "..tostring(results[2])..".")
-			else
-				sendNotice("The result of your expression is: "..tostring(results[2])..".", source)
-			end
+			reply(source, target, "The result of your expression is: "..tostring(results[2])..".")
 		else 
 			table.remove(results, 1)
-			if target == bot.channel then
-				sendMessage("The results of your expressions are: " .. table.concat(results, ', ') .. ".")
-			else
-				sendNotice("The results of your expressions are: " .. table.concat(results, ', ') .. ".", source)
-			end
+			reply(source, target, "The results of your expressions are: " .. table.concat(results, ', ') .. ".")
 		end
 		return true
 	end,
@@ -350,25 +355,19 @@ local com = {
 		f:close()
 		t = t:gsub('\n', '; ')
 		if #t > 400 then t = t:sub(1, 395)..'[...]' end
-		t = source..': '..t
-		if target == bot.channel then sendMessage(t)
-		else sendNotice(t, source)
-		end
+		reply(source, target, t)
 		return true
 	end,
 	google = function(query, source, target)
 		local q = urlify(query)
 		if not q then sendNotice("Give me a valid string to search!", source) end
-		if target == bot.channel then
-			sendMessage(source..": http://lmgtfy.com/?q="..q)
-		else
-			sendNotice("http://lmgtfy.com/?q="..q, source)
-		end
+		local link = "http://lmgtfy.com/?l=1&q="..q
+		reply(source, target, link)
 		return true
 	end,
 	export = function(_, source)
 		if masters[source] then
-			if _ == 'clear' then messages = {} return end
+			if _ == 'clear' or _ == 'clean' then messages = {} return true end
 			local f, err = io.open('logs/export', 'w')
 			if not f then
 				sendNotice("I'm sorry for disappointing you, my master. I could not open the file. "..err, source)
@@ -381,7 +380,6 @@ local com = {
 	end,
 	s = function(query, source, target)
 		local pattern, out = query:match "^(.-)%s+(.+)"
-		print(pattern, out)
 		if not pattern then pattern = query end
 		if pattern == '' then 
 			sendNotice("Hey! This is invalid! Fix it!", source)
@@ -395,25 +393,30 @@ local com = {
 					if not succ then
 						sendNotice('Nice try. '..res, source)
 					else
-						sendMessage('<'..source..'> '..res)
+						reply(source, target, '<'..v[1]..'> '..res)
 					end
-					return
+					return true
 				end
 			end
 			sendNotice("No message matching your query was found.", source)
 		end
 		return true
 	end,
-	help = function(_, source)
-		if _ and #_>0 and source == "Nix" then source = _ end
-		for i, v in ipairs(helpStr) do sendNotice(v, source) end
+	cookie = dofile 'modules/cookie.lua',
+	help = function(topic, source)
+		if not topic or #topic == 0 then
+			for i, v in ipairs(helpStr) do sendNotice(v, source) end
+		elseif not topic:find ' ' and helpStr[topic] then
+			for i, v in ipairs(helpStr[topic]) do sendNotice(v, source) end
+		else
+			sendNotice("Invalid topic. Please use !help to obtain the possible topics.", source)
+		end
 		return true
 	end,
 	__index = function(_, _, _, source)
 		return function(_, source)
-			sendNotice("This command doesn't exist! Why don't you mess with somebot else?", source)
-		end
 
+		end
 	end}
 
 setmetatable(com, com)
@@ -422,7 +425,7 @@ setmetatable(com, com)
 function process(lerp)
 	if lerp ~= nil then
 		local l = lerp:find("PING")
-		if l and l == 1 then
+		if l == 1 then
 			local x = lerp
 			x = string.gsub(x,"PING","PONG",1)
 			irc:send(x.."\r\n")
@@ -439,7 +442,8 @@ function process(lerp)
 			   rawmsg:lower() == 'circuloid!' then sendMessage "I'm nicer than him!" end
 			local i = rawmsg:sub(1, 1)
 			local j = rawmsg:sub(2, 2)
-			if i == '!' and not (j == '!' or j == '')then
+			local success, r = true, false
+			if i == ',' and not (j == ',' or j == '')then
 
 				rawmsg = rawmsg:sub(2, -1)
 
@@ -447,8 +451,10 @@ function process(lerp)
 
 				c = c or rawmsg
 
-				r = com[c](rawmsg2, source, chan)
+				success, r = pcall(com[c], rawmsg2, source, chan)
 			end
+
+			if not success then sendNotice(r, source) end
 
 			if r or source == bot.nick or not source then return end
 			table.insert(messages, {source, rawmsg})
