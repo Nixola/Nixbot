@@ -147,11 +147,9 @@ end
 helpStr = {
 --"Nixbot is a single channel IRC bot made with LÖVE (http://love2d.org) based on Kawata's code.",
 --"It will answer to the messages \"Nixbot!\" and \"Circuloid!\", as well as some commands that I'm about to list.",
-"Some of these commands can only be used by a Master. Every LÖVE developer is recognized as a Rank 0 master, as well as me.",
-"If a command requires a Master, it will accept any master. If it requires a Rank 0 Master, it has to be a hardcoded one.",
+"Some of these commands can only be used by a Master. Every LÖVE developer is recognized as a Rank 0 master, as well as me. If a command requires a Master, it will accept any master. If it requires a Rank 0 Master, it has to be a hardcoded one.",
 --"There's currently no way to add a Rank 0 master in runtime and I don't want to add one, even though it would be easy.",
-"Commands: !12poke, !12quit, !12lock, !12free, !12obey, !12disobey, !12join, !12ignore, !12listen, !12math, !12lua, !12google, !12s, !12cookie.",
-"Run !help command to get informations about it.",
+"Commands: !12poke, !12quit, !12lock, !12free, !12obey, !12disobey, !12join, !12ignore, !12listen, !12math, !12lua, !12google, !12s, !12cookie. Run !help command to get informations about it.",
 poke = {"!12poke <3nick>: sends a mean CTCP ACTION command which has nick as object (e.g: Nixbot installed Windows Vista on Nixola's PC)."},
 quit = {"!12quit: shuts the bot down. A Master is required."},
 lock = {"!12lock: locks the bot, so that it will ignore every message but Masters' ones. A Master is required."},
@@ -433,7 +431,13 @@ function process(lerp)
 		end
 		local chan, source, rawmsg = parse(lerp)
 
-		local r
+		if chan == bot.nick then
+
+			local success, r = pcall(com.cookie, rawmsg, source, true)
+
+			if not success then sendNotice(r, source) end
+
+		end
 
 		if ((not settings.Master) or (settings.Master and masters[source])) and not ignored[source] then
 
@@ -452,6 +456,7 @@ function process(lerp)
 				c = c or rawmsg
 
 				success, r = pcall(com[c], rawmsg2, source, chan)
+
 			end
 
 			if not success then sendNotice(r, source) end

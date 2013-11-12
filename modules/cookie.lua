@@ -1,33 +1,21 @@
 cookie = {}
 cookie.__index = cookie
-cookie.buildings = {
-	{name = 'cursor'; cps = 0.02, price = 10},
-	{name = 'grandma'; cps = 0.1, price = 66},
-	{name = 'farm'; cps = 0.4, price = 166},
-	{name = 'factory'; cps = 1, price = 2000},
-	{name = 'mine'; cps = 4, price = 6666},
-	{name = 'shipment'; cps = 10, price = 13333},
-	{name = 'alchemyLab'; cps = 40, price = 66665},
-	{name = 'portal'; cps = 666.6, price = 1111110},
-	{name = 'timeMachine'; cps = 9876.5, price = 82304526},
-	{name = 'antimatterCondenser'; cps = 99999.9, price = 2666666666}
-}
+cookie.buildings = dofile 'cookie/settings.lua'
 classOf = setmetatable
 
 for i, v in ipairs(cookie.buildings) do
-	cookie.buildings[v.name] = v
+	cookie.buildings[v.name:lower()] = v
 end
-
-local int = "(%d+).*"
-local float="(%d+%.?%d*).*"
 
 string.beautify = function(str)
 
 	str = tostring(str)
 
+	local decimal
+
 	if str:find '%.' then
 
-		str = str:match '(.+)%..+'
+		str, decimal = str:match '(.+)%.(.+)'
 
 	end
 
@@ -41,24 +29,33 @@ string.beautify = function(str)
 
 	str = str:reverse()
 
-	return str
+
+	return str.. (decimal and '.'..decimal or '')
 
 end
 
+
+cookie.price = function(player, building)
+
+	local quant = player[building:lower()]
+
+	return cookie.buildings[building:lower()].price*(1.15^quant)
+
+end
 
 
 cookie.loadPlayer = function(name)
 
 	local f = io.open("cookie/"..name, 'rw')
 	local t = {name = name}
-	local l = f:read '*l'
-	t.lastTime = tonumber(string.match(l or os.time(), int))
-	t.cookies = tonumber(string.match(f:read '*l' or 1, float))
+	local l = f and f:read '*l' or os.time()
+	t.lastTime = tonumber(string.match(l, int))
+	t.cookies = tonumber(string.match(f and f:read '*l' or 1, float))
 
 	for i, v in ipairs(cookie.buildings) do
-		t[v.name] = tonumber(string.match(f:read '*l' or 0, int))
+		t[v.name:lower()] = tonumber(string.match(f and f:read '*l' or 0, int))
 	end
-	f:close()
+	local _ = f and f:close()
 
 	return classOf(t, cookie)
 
@@ -75,7 +72,7 @@ cookie.save = function(player)
 
 	for i, v in ipairs(cookie.buildings) do
 
-		f:write(player[v.name], ' ', v.name, 's\n')
+		f:write(player[v.name:lower()], ' ', v.name, 's\n')
 
 	end
 
@@ -91,8 +88,10 @@ cookie.update = function(player)
 	local cps = 0
 
 	for i, v in ipairs(cookie.buildings) do
-		player.cookies = player.cookies + player[v.name]*dt*cookie.buildings[v.name].cps
-		cps = cps + player[v.name]*cookie.buildings[v.name].cps
+		local cs = cookie.buildings[v.name:lower()].cps
+		local quant = player[v.name:lower()]
+		player.cookies = player.cookies + quant*dt*cs
+		cps = cps + quant*cs
 	end
 
 	player.cookies = player.cookies + 1
@@ -111,7 +110,7 @@ cookie.list = function(player)
 
 	for i, v in ipairs(cookie.buildings) do
 
-		if player[v.name] > 0 then
+		if player[v.name:lower()] > 0 then
 
 			list[#list+1] = {name = v.name, i = i}
 
@@ -132,11 +131,11 @@ cookie.list = function(player)
 
 		if list[i+1] then
 
-			str = str:format(', '..player[v.name]..' '..name..(player[v.name] == 1 and '' or 's')..'%s')
+			str = str:format(', '..player[v.name:lower()]..' '..name..(player[v.name:lower()] == 1 and '' or 's')..'%s')
 
 		else
 
-			str = str:format(' and '..player[v.name]..' '..name..(player[v.name] == 1 and '' or 's'))
+			str = str:format(' and '..player[v.name:lower()]..' '..name..(player[v.name:lower()] == 1 and '' or 's'))
 
 		end
 
@@ -154,7 +153,7 @@ cookie.getPrices = function(player)
 
 	for i, v in ipairs(cookie.buildings) do
 
-		local Price = cookie.buildings[v.name].price*(1.15^player[v.name])
+		local Price = cookie.buildings[v.name:lower()].price*(1.15^player[v.name:lower()])
 		
 		str = str .. v.name..': '..string.beautify(math.ceil(Price))..'¢; '
 
@@ -165,9 +164,11 @@ cookie.getPrices = function(player)
 end
 
 
-cookie.command = function(query, source)
+cookie.command = function(query, source, silent)
 
 	local player = cookie.loadPlayer(source)
+
+	query = query and query:lower() or nil
 
 	player:update()
 
@@ -190,7 +191,7 @@ cookie.command = function(query, source)
 		end
 
 
-		local Price = cookie.buildings[element].price*(1.15^player[element])
+		local Price = player:price(element)
 
 		if player.cookies < Price then
 			sendNotice("You don't have enough cookies to buy it.", source)
@@ -202,9 +203,9 @@ cookie.command = function(query, source)
 
 		if quantity then
 
-			for i = 1, (quantity == 'all' and 6/0 or tonumber(quantity)) do
+			for i = 1, (quantity == 'all' and 6/0 or tonumber(quantity)-1) do
 
-				Price = cookie.buildings[element].price*(1.15^player[element])
+				Price = player:price(element)
 				if player.cookies < Price then
 					break
 				end
@@ -224,7 +225,7 @@ cookie.command = function(query, source)
 	elseif action == 'price' or action == 'prices' then
 
 		if element and element ~= '' and not cookie.buildings[element] then
-			sendNotice("Invalid building.", source)
+			if not silent then sendNotice("Invalid building.", source) end
 			return true
 
 		elseif element == '' then
@@ -234,15 +235,59 @@ cookie.command = function(query, source)
 
 		end
 
-		sendNotice(("Your next %s will cost %s cookies."):format(element, string.beautify(cookie.buildings[element].price*(1.15^player[element]))), source)
+		sendNotice(("Your next %s will cost %s cookies."):format(element, string.beautify(player:price(element))), source)
 		return true
 
 	elseif action == 'help' then
 		com.help('cookie', source)
 		return true
 
+	elseif action == 'sell' then
+
+		local quantity
+		if element:match("%S+%s+%S+") then
+
+			element, quantity = element:match "(%S+)%s+(%S+)"
+
+			if not (quantity == 'all' or tonumber(quantity)) then quantity = nil end
+
+		end
+
+		if not cookie.buildings[element] then
+			if not silent then sendNotice("Invalid building.", source) end
+			return true
+		end
+
+		if player[element] == 0 then
+			sendNotice("You have 0 "..(element == 'factory' and 'factorie' or element).."s already.", source)
+			return true
+		end
+
+		local Price = player:price(element)/2
+
+		player.cookies = player.cookies + Price
+		player[element] = player[element] - 1
+
+		if quantity then
+
+			for i = 1, (quantity == 'all' and 6/0 or tonumber(quantity)-1) do
+
+				Price = player:price(element)/2
+				if player[element] == 0 then
+					break
+				end
+
+				player[element] = player[element] - 1
+				player.cookies = player.cookies + Price
+
+			end
+
+		end
+
+
+
 	elseif action and not (action == '') then
-		sendNotice("Invalid action.", source)
+		if not silent then sendNotice("Invalid action.", source) end
 		return true
 	end
 
