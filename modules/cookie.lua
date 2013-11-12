@@ -82,17 +82,30 @@ cookie.list = function(player)
 
 	str = str:format(player.cookies, '%s')
 
+	local list = {}
+
 	for i, v in ipairs(cookie.buildings) do
+
+		if player[v.name] > 0 then
+
+			list[#list+1] = {name = v.name, i = i}
+
+		end
+
+	end
+	--another for
+
+	for i, v in ipairs(list) do
 
 		local name
 
 		if v.name == 'factory' and player.factory > 1 then
-			name = 'factor'
+			name = 'factorie'
 		else
 			name = v.name
 		end
 
-		if cookie.buildings[i+1] and player[cookie.buildings[i+1].name] > 0 then
+		if list[i+1] then
 
 			str = str:format(', '..player[v.name]..' '..name..(player[v.name] == 1 and '' or 's')..'%s')
 
@@ -103,6 +116,7 @@ cookie.list = function(player)
 		end
 
 	end
+	--end another for
 
 	return str
 
