@@ -21,6 +21,31 @@ end
 local int = "(%d+).*"
 local float="(%d+%.?%d*).*"
 
+string.beautify = function(str)
+
+	str = tostring(str)
+
+	if str:find '%.' then
+
+		str = str:match '(.+)%..+'
+
+	end
+
+	str = str:reverse()
+
+	while str:find '%d%d%d%d' do
+
+		str = str:gsub('(%d%d%d)(%d)', "%1'%2", 1)
+
+	end
+
+	str = str:reverse()
+
+	return str
+
+end
+
+
 
 cookie.loadPlayer = function(name)
 
@@ -78,9 +103,9 @@ end
 
 cookie.list = function(player)
 
-	local str = 'You have %d cookies%s.'
+	local str = 'You have %s cookies%s.'
 
-	str = str:format(player.cookies, '%s')
+	str = str:format(string.beautify(math.floor(player.cookies)), '%s')
 
 	local list = {}
 
@@ -131,7 +156,7 @@ cookie.getPrices = function(player)
 
 		local Price = cookie.buildings[v.name].price*(1.15^player[v.name])
 		
-		str = str .. v.name..': '..math.ceil(Price)..'¢; '
+		str = str .. v.name..': '..string.beautify(math.ceil(Price))..'¢; '
 
 	end
 
@@ -193,8 +218,7 @@ cookie.command = function(query, source)
 
 	elseif action == 'cps' then
 
-
-		sendNotice("You are baking "..player.cps.." cookies per second.", source)
+		sendNotice("You are baking "..string.beautify(player.cps).." cookies per second.", source)
 		return true
 
 	elseif action == 'price' or action == 'prices' then
@@ -210,7 +234,7 @@ cookie.command = function(query, source)
 
 		end
 
-		sendNotice(("Your next %s will cost %d cookies."):format(element, cookie.buildings[element].price*(1.15^player[element])), source)
+		sendNotice(("Your next %s will cost %s cookies."):format(element, string.beautify(cookie.buildings[element].price*(1.15^player[element]))), source)
 		return true
 
 	elseif action == 'help' then
