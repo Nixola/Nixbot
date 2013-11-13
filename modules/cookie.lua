@@ -57,7 +57,7 @@ cookie.loadPlayer = function(name)
 	end
 	local _ = f and f:close()
 
-	return classOf(t, cookie)
+	return classOf(t, cookie), f ~= nil
 
 end
 
@@ -164,15 +164,22 @@ cookie.getPrices = function(player)
 end
 
 
-cookie.command = function(query, source, silent)
+cookie.command = function(query, source, target, silent)
 
 	local player = cookie.loadPlayer(source)
 
-	query = query and query:lower() or nil
+	query = query or nil
 
 	player:update()
 
 	local action, element = string.match(query or '', "^(%S+)%s*(.*)")
+
+	local Oaction, Oelement = action, element
+
+	action = action or ''
+	element = element or ''
+
+	action, element = action:lower(), element:lower()
 
 	if action == 'buy' then
 
@@ -284,7 +291,18 @@ cookie.command = function(query, source, silent)
 
 		end
 
-
+	elseif action == 'show' then
+		local p, exists = cookie.loadPlayer(Oelement)
+		if not exists then
+			if not silent then
+				sendNotice("That player doesn't even exist.", source)
+			end
+			return true
+		end
+		p:update()
+		local ans = "Name: %s (well you know); cookies: %s; cps = %s"
+		reply(source, target, ans:format(p.name, string.beautify(p.cookies), string.beautify(p.cps)))
+		return true
 
 	elseif action and not (action == '') then
 		if not silent then sendNotice("Invalid action.", source) end
