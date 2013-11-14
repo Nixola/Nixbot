@@ -35,11 +35,21 @@ string.beautify = function(str)
 end
 
 
-cookie.price = function(player, building)
+cookie.price = function(player, building, quantity)
+
+	quantity = quantity or 1
 
 	local quant = player[building:lower()]
 
-	return cookie.buildings[building:lower()].price*(1.15^quant)
+	local s = 0
+
+	for i = 0, quantity-1 do
+
+		s = s + cookie.buildings[building:lower()].price*(1.15^(quant+i))
+
+	end
+
+	return s
 
 end
 
@@ -142,6 +152,8 @@ cookie.list = function(player)
 	end
 	--end another for
 
+	str = str:gsub('%%s', '')
+
 	return str
 
 end
@@ -193,7 +205,7 @@ cookie.command = function(query, source, target, silent)
 		end
 
 		if not cookie.buildings[element] then
-			sendNotice("Buildings: "..player:getPrices(), source)
+			reply(source, target, "Buildings: "..player:getPrices())
 			return true
 		end
 
@@ -201,7 +213,7 @@ cookie.command = function(query, source, target, silent)
 		local Price = player:price(element)
 
 		if player.cookies < Price then
-			sendNotice("You don't have enough cookies to buy it.", source)
+			reply(source, target, "You don't have enough cookies to buy it.")
 			return true
 		end
 
@@ -226,10 +238,14 @@ cookie.command = function(query, source, target, silent)
 
 	elseif action == 'cps' then
 
-		sendNotice("You are baking "..string.beautify(player.cps).." cookies per second.", source)
+		reply(source, target, "You are baking "..string.beautify(player.cps).." cookies per second.")
 		return true
 
 	elseif action == 'price' or action == 'prices' then
+
+		local e, q = element:match "(%S+)%s+(%S+)"
+
+		element = e or element
 
 		if element and element ~= '' and not cookie.buildings[element] then
 			if not silent then sendNotice("Invalid building.", source) end
@@ -237,12 +253,22 @@ cookie.command = function(query, source, target, silent)
 
 		elseif element == '' then
 
-			sendNotice(player:getPrices(), source)
+			reply(source, target, player:getPrices())
 			return true
 
 		end
 
-		sendNotice(("Your next %s will cost %s cookies."):format(element, string.beautify(player:price(element))), source)
+		local building
+		if not tonumber(q) or tonumber(q) <= 1 then 
+			q = nil 
+		else
+			building = element
+			building = building == 'factory' and 'factories' or building..'s'
+
+		end
+
+
+		reply(source, target, ("Your next%s %s will cost %s¢."):format((q and ' '..q or ''), building or element, string.beautify(math.ceil(player:price(element, q)))))
 		return true
 
 	elseif action == 'help' then
@@ -266,7 +292,7 @@ cookie.command = function(query, source, target, silent)
 		end
 
 		if player[element] == 0 then
-			sendNotice("You have 0 "..(element == 'factory' and 'factorie' or element).."s already.", source)
+			reply(source, target, "You have 0 "..(element == 'factory' and 'factorie' or element).."s already.")
 			return true
 		end
 
@@ -292,16 +318,23 @@ cookie.command = function(query, source, target, silent)
 		end
 
 	elseif action == 'show' then
-		local p, exists = cookie.loadPlayer(Oelement)
-		if not exists then
-			if not silent then
-				sendNotice("That player doesn't even exist.", source)
+		local ans, answer = "%s: cookies = %s, cps = %s", ''
+		local skip = true
+		for match in Oelement:gmatch "([^%s]+)" do
+			local p, exists = cookie.loadPlayer(match)
+			if not exists then
+				if not silent then
+					sendNotice(match.." doesn't even exist.", source)
+				end
+			else
+				skip = false
+				p:update()
+				answer = answer .. ans:format(p.name, string.beautify(p.cookies), string.beautify(p.cps)) .. '; '
 			end
-			return true
 		end
-		p:update()
-		local ans = "Name: %s (well you know); cookies: %s; cps = %s"
-		reply(source, target, ans:format(p.name, string.beautify(p.cookies), string.beautify(p.cps)))
+		if skip then return true end
+		answer = answer:sub(1, -3)
+		reply(source, target, answer)
 		return true
 
 	elseif action and not (action == '') then
@@ -309,7 +342,7 @@ cookie.command = function(query, source, target, silent)
 		return true
 	end
 
-	sendNotice(player:list(), source)
+	reply(source, target, player:list())
 	
 	player:save()
 	return true

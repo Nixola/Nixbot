@@ -30,6 +30,7 @@ b = function(str)
 end
 
 for i, name in ipairs(names) do
+
 	local f = io.open(name, 'r')
 	if not f then error 'absent player' end
 	local t = {name = name}
@@ -40,6 +41,8 @@ for i, name in ipairs(names) do
 	for i, v in ipairs(cookie.buildings) do
 		t[v.name] = tonumber(string.match(f and f:read '*l' or 0, int))
 	end
+
+	f:close()
 
 	t.time = os.time()
 	local dt = t.time - t.lastTime

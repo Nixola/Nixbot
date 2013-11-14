@@ -11,10 +11,22 @@ patterns = {
 
 messages = {}
 
+
+
+noticed = {}
+
+local f = io.open("settings/notice", 'r')
+if f then
+	for nick in f:lines() do
+		noticed[nick] = true
+	end
+	f:close()
+end
+
 reply = function(source, target, message)
 
 	if target == bot.channel then
-		sendMessage(source..": "..message)
+		sendMessage(message)
 	else
 		sendNotice(message, source)
 	end
@@ -30,6 +42,26 @@ urlify = function(str)
   end
   return str	
 end
+
+
+function string.safify(string)
+
+	local f = iOpen('/tmp/pattern', 'w')
+
+	f:write(string)
+
+	f:close()
+
+	f = iPopen([[sed -r "s/(.)\+(\1\+)+/\1\1+/g" /tmp/pattern]], 'r')
+
+	local l = f:read '*l'
+
+	f:close()
+
+	return l
+
+end
+
 
 commands = {
 
@@ -137,7 +169,7 @@ end
 
 sendNotice = function(str, target)
 
-	irc:send(': NOTICE '..target..' :'..(str or 'empty string?')..'\r\n')
+	irc:send(': '..(noticed[target] and 'NOTICE ' or 'PRIVMSG ')..target..' :'..(str or 'empty notice, don\'t ask')..'\r\n')
 
 	return str
 
@@ -164,8 +196,9 @@ lua = {"!12lua <3code>: runs sandboxed and ulimit(-t 1)ed Lua code, printing
 google = {"!12google <3something>: too lazy to google for something? Let Nixbot google that for you!",},
 s = {"!12s <3Lua pattern> <4string>: iterates backwards through the received messages, :gsub(pattern,string)ing the first appropriate one.",},
 cookie = {"!12cookie <3action> <4element> <5[param]> Cookie is a shamelessly limited copy of Orteil's Cookie Clicker. 3Action and 4Element can be null (!12cookie), in which case you gain a cookie and get a list of your buildings.",
-		  "Actions: 3cps, takes no arguments, shows how many cookies you bake per second; 3buy: takes an element, which is a building, and tries to buy it with the available cookies; 3price: takes an element, which is a building, and shows you its price, or lists the price of the buildings if <4Element> is null.",
-		  "Note: 3buy can take another parameter (!12cookie 3buy <4building> <5[param]>), which is either 'all' or a number. It represents how many buildings of that kind to buy, with 'all' buying them until you're out of cookies. For a list of available buildings, use \"!12cookie 3buy\"."}
+		  "Actions: 3cps, takes no arguments, shows how many cookies you bake per second; 3buy: takes an element, which is a building, and tries to buy it with the available cookies, buys <5param> buildings if provided (!12cookie 3buy <4building> 5all buys as many as possible);",
+		  "3price: takes an element, which is a building, and shows you its price, lists the price of the buildings if <4Element> is null or invalid or tells you how much X buildings cost (e.g. !12cookie 3price 4factory5 6); 3sell: behaves like 3buy, except it sells X buildings for half the price you paid them and doesn't list anything. For a list of available buildings, use \"!12cookie 3buy\"."},
+notice = {"!12notice <3no>: choose whether Nixbot should message or notice you when queried via PM. '!12notice 3no' or '!12notice 3pm' make it message you, anything else makes it notice you."}
 }
 
 pokeSentences = {
@@ -186,7 +219,7 @@ local scp = "(.-)%s+(.+)%s*"
 com = {
 	poke = function(nick, source, target)
 		if not (target == bot.channel) then return end
-		if nick:find ' ' then sendNotice('Did you want to provide me a nickname with spaces? F**k off!', source) return end
+		if not nick or nick:find ' ' then sendNotice('Invalid nickname! F**k off!', source) return end
 		sendMessage('\001ACTION '..pokeSentences[math.random(#pokeSentences)]:format(nick)..'\001')
 		return true
 	end,
@@ -382,6 +415,7 @@ com = {
 		if pattern == '' then 
 			sendNotice("Hey! This is invalid! Fix it!", source)
 		else
+			pattern = pattern:safify()
 			for i = #messages, 1, -1 do
 				local v = messages[i]
 				local success, result = pcall(string.match, v[2], pattern)
@@ -401,6 +435,16 @@ com = {
 		return true
 	end,
 	cookie = dofile 'modules/cookie.lua',
+	notice = function(yes, source)
+		noticed[source] = (yes ~= 'no' and yes ~= 'pm')
+		local f = io.open("settings/notice", 'w')
+		for i, v in pairs(noticed) do
+			if v then
+				f:write(i, '\n')
+			end
+		end
+		f:close()
+	end,
 	help = function(topic, source)
 		if not topic or #topic == 0 then
 			for i, v in ipairs(helpStr) do sendNotice(v, source) end
@@ -422,8 +466,8 @@ setmetatable(com, com)
 
 function process(lerp)
 	if lerp ~= nil then
-		local l = lerp:find("PING")
-		if l == 1 then
+		local l = lerp:match("^PING")
+		if l then
 			local x = lerp
 			x = string.gsub(x,"PING","PONG",1)
 			irc:send(x.."\r\n")
@@ -433,7 +477,7 @@ function process(lerp)
 
 		if chan == bot.nick then
 
-			local success, r = pcall(com.cookie, rawmsg, source, true)
+			local success, r = pcall(com.cookie, rawmsg, source, target, true)
 
 			if not success then sendNotice(r, source) end
 
