@@ -474,7 +474,7 @@ function process(lerp)
 			return
 		end
 		local chan, source, rawmsg = parse(lerp)
-
+		if ignored[source] then return end
 		if chan == bot.nick then
 
 			local success, r = pcall(com.cookie, rawmsg, source, target, true)

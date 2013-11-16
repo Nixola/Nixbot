@@ -329,7 +329,7 @@ cookie.command = function(query, source, target, silent)
 			else
 				skip = false
 				p:update()
-				answer = answer .. ans:format(p.name, string.beautify(p.cookies), string.beautify(p.cps)) .. '; '
+				answer = answer .. ans:format(p.name, string.beautify(math.floor(p.cookies)), string.beautify(p.cps)) .. '; '
 			end
 		end
 		if skip then return true end
