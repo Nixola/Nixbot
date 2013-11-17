@@ -11,7 +11,7 @@ There's currently no way to add a Rank 0 master in runtime and I don't want to a
 
 Commands list:
 
-!poke nick: sends a mean CTCP ACTION command which has nick as object (e.g: Nixbot installed Windows Vista on Nixola's PC).
+!poke \<nick\>: sends a mean CTCP ACTION command which has nick as object (e.g: Nixbot installed Windows Vista on Nixola's PC).
 
 !quit: shuts the bot down. A Master is required.
 
@@ -19,16 +19,24 @@ Commands list:
 
 !free: unlocks the bot, so that it will parse everyone's messages again.
 
-!obey nick: makes nick a Rank 1 Master. A Master is required.
+!obey \<nick\>: makes nick a Rank 1 Master. A Master is required.
 
-!disobey nick: revokes the Master status on nick. A Rank 0 Master is required.
+!disobey \<nick\>: revokes the Master status on nick. A Rank 0 Master is required.
 
-!join channel: makes the bot part from the current channel to join a new one. A Master is required.
+!join \<channel\>: makes the bot part from the current channel to join a new one. A Master is required.
 
-!ignore nick: makes the bot ignore every nick's message until !listen nick is used. A Master is required.
+!ignore \<nick\>: makes the bot ignore every nick's message until !listen nick is used. A Master is required.
 
-!listen nick: makes the bot listen again to an ignored user. A Master is required.
+!listen \<nick\>: makes the bot listen again to an ignored user. A Master is required.
 
-!math expression[, expressions]: makes the bot evaluate expression (or the expressions) and send either a message or a notice with the result[s].
+!math \<expression\>[, <expressions>]: makes the bot evaluate expression (or the expressions) and send either a message or a notice with the result[s].
+
+!lua \<code\>: runs sandboxed and ulimit(-t 1)ed Lua code, printing or noticing the result.
+
+!google \<query\>: too lazy to google for something? Let Nixbot google that for you!
+
+!s \<Lua pattern\> \<string\>: iterates backwards through the received messages, until it finds one which matches the pattern, substituting each match with the string.
+
+!cookie \<\[action\]\> \<\[element\]\> \<\[param\]\>: Cookie is a shamelessly limited copy of Orteil's Cookie Clicker. Since I'm too lazy to write how to use it, check it in the code.
 
 !help: sends this message as a notice to who calls it.
