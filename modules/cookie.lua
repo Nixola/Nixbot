@@ -1,7 +1,9 @@
-cookie = {}
+local cookie = {}
 cookie.__index = cookie
 cookie.buildings = dofile 'cookie/settings.lua'
-classOf = setmetatable
+local classOf = setmetatable
+
+lastCookie = {}
 
 for i, v in ipairs(cookie.buildings) do
 	cookie.buildings[v.name:lower()] = v
@@ -182,8 +184,6 @@ cookie.command = function(query, source, target, silent)
 
 	query = query or nil
 
-	player:update()
-
 	local action, element = string.match(query or '', "^(%S+)%s*(.*)")
 
 	local Oaction, Oelement = action, element
@@ -192,6 +192,20 @@ cookie.command = function(query, source, target, silent)
 	element = element or ''
 
 	action, element = action:lower(), element:lower()
+
+	if action == '' then
+
+		if lastCookie[source] and lastCookie[source] >= os.time() then
+			lastCookie[source] = lastCookie[source] + 1
+			reply(source, target, ("You can't use ,cookie more than once a second. Wait %d seconds before using it."):format(lastCookie[source]-os.time()))
+			return true
+		else
+			lastCookie[source] = os.time()
+		end
+
+	end
+
+	player:update()
 
 	if action == 'buy' then
 
@@ -337,7 +351,7 @@ cookie.command = function(query, source, target, silent)
 		reply(source, target, answer)
 		return true
 
-	elseif action and not (action == '') then
+	elseif not (action == '') then
 		if not silent then sendNotice("Invalid action.", source) end
 		return true
 	end
