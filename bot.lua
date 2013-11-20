@@ -399,6 +399,9 @@ com = {
 			reply(source, target, "The result of your expression is: "..tostring(results[2])..".")
 		else 
 			table.remove(results, 1)
+			for i, v in ipairs(results) do
+				results[i] = tostring(v)
+			end
 			reply(source, target, "The results of your expressions are: " .. table.concat(results, ', ') .. ".")
 		end
 		return true
