@@ -421,7 +421,7 @@ com = {
 		f = io.open("out", 'r')
 		local t = f:read '*a'
 		f:close()
-		t = t:gsub('\n', '; ')
+		t = t:gsub('[\n\r]', '; ')
 		if #t > 400 then t = t:sub(1, 395)..'[...]' end
 		reply(source, target, t)
 		return true
