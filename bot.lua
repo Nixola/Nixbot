@@ -389,7 +389,7 @@ com = {
 		if not results[1] then sendNotice(results[2], source) return end
 		local maxN = table.maxn(results)
 		for i = maxN, 1, -1 do
-			if not results[i]then table.remove(results, i) end
+			if results[i] == nil then table.remove(results, i) end
 		end
 		if results[2] == nil then
 			sendNotice("Your expression has no result.", source)
