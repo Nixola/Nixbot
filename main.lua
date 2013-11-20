@@ -1,6 +1,9 @@
 local socket = require("socket")
 dofile 'settings.lua'
 dofile 'bot.lua'
+event = {}
+event.next = function(self) table.remove(self, 1) end
+event.push = function(self, func) table.insert(self, func) end
 
 
 print("LoveBot IRC BOT is running!")
@@ -29,6 +32,10 @@ end
 update = function()
 
 	while true do
+		if event[1] then 
+			event[1]()
+			event:next()
+		end
 		local line, err = irc:receive("*l")
 		if line then
 			process(line)

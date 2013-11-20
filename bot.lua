@@ -6,8 +6,10 @@ patterns = {
 	PART = '(%S+)%s*%:*(.*)',
 	PRIVMSG = '(%S+)%s%:(.*)',
 	QUIT = ':*(.*)',
-	NOTICE = '(%S+)%s%:(.*)'
+	NOTICE = '(%S+)%s%:(.*)',
 }
+
+local iOpen, iPopen = io.open, io.popen
 
 messages = {}
 
@@ -27,8 +29,10 @@ reply = function(source, target, message)
 
 	if target == bot.channel then
 		sendMessage(message)
-	else
+	elseif noticed[source] then
 		sendNotice(message, source)
+	else
+		sendMessage(message, source)
 	end
 
 end
@@ -93,6 +97,12 @@ commands = {
 
 			local target, message = args:match(patterns.PRIVMSG)
 
+			if message:match "\001(.+)\001" then
+
+				return commands.received.CTCP(nick, source, message:match "\001(.+)\001")
+
+			end
+
 			return target, nick, message
 
 		end,
@@ -125,6 +135,30 @@ commands = {
 			else no = 'CHANNEL NOTICE: ' end
 
 			return no..n..s..': '..m, t, nick
+
+		end,
+
+		CTCP = function(nick, source, args)
+
+			local params = {}
+
+			for param in args:gmatch "(%S+)" do
+
+				params[#params+1] = param
+
+			end
+
+			local ctcp = params[1]
+
+			if ctcp:lower() == 'version' then
+
+				local ans = "\001VERSION %s %s\001"
+
+				sendNotice(ans:format("Cookiebot", "0.0.0.0000"), nick)
+
+				return "CTCP Version received", nick
+
+			end
 
 		end
 
@@ -169,7 +203,7 @@ end
 
 sendNotice = function(str, target)
 
-	irc:send(': '..(noticed[target] and 'NOTICE ' or 'PRIVMSG ')..target..' :'..(str or 'empty notice, don\'t ask')..'\r\n')
+	irc:send(': NOTICE '..target..' :'..(str or 'empty notice, don\'t ask')..'\r\n')
 
 	return str
 
@@ -357,7 +391,7 @@ com = {
 		for i = maxN, 1, -1 do
 			if not results[i]then table.remove(results, i) end
 		end
-		if not results[2] then
+		if results[2] == nil then
 			sendNotice("Your expression has no result.", source)
 			return
 		end
@@ -445,6 +479,7 @@ com = {
 		end
 		f:close()
 	end,
+--	translate = dofile 'modules/translate.lua',
 	help = function(topic, source)
 		if not topic or #topic == 0 then
 			for i, v in ipairs(helpStr) do sendNotice(v, source) end
@@ -474,7 +509,7 @@ function process(lerp)
 			return
 		end
 		local chan, source, rawmsg = parse(lerp)
-		if ignored[source] then return end
+
 		if chan == bot.nick then
 
 			local success, r = pcall(com.cookie, rawmsg, source, target, true)
