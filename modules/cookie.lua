@@ -351,6 +351,60 @@ cookie.command = function(query, source, target, silent)
 		reply(source, target, answer)
 		return true
 
+	elseif action == 'rank' then
+
+		local f = io.popen('ls cookie', 'r')
+		local files = {}
+		local rank = tonumber(Oelement) or Oelement
+		for file in f:lines() do
+			if not (file:match'.+%.lua$' or file:match '.+%.txt' or file == 'bac') then
+				table.insert(files, file)
+			end
+		end
+		f:close()
+		local players = {}
+		for i, v in ipairs(files) do
+			players[i] = cookie.loadPlayer(v)
+			players[v] = players[i]
+			players[i]:update()
+		end
+		table.sort(players, function(a, b) return a.cps > b.cps end)
+
+		for i, v in ipairs(players) do
+
+			v.rank = i
+
+		end
+
+		local a = "%d: %s (%s cps); "
+		local ans = ''
+
+		if rank == '' then
+
+			for i = 1, #players > 5 and 5 or #players do
+
+				ans = ans .. a:format(i, players[i].name, string.beautify(players[i].cps))
+
+			end
+
+		elseif not players[rank] then
+
+			reply(source, target, "That player ("..rank..") doesn't exist.")
+			return true
+
+		else
+
+			local v = players[rank]
+			
+			ans = a:format(v.rank, v.name, string.beautify(v.cps))
+
+		end
+
+		ans = ans:sub(1, -3)
+
+		reply(source, target, ans)
+		return true
+
 	elseif not (action == '') then
 		if not silent then sendNotice("Invalid action.", source) end
 		return true
