@@ -1,0 +1,73 @@
+formula: (BaseCPS + upgrade.add1)*upgrade.multiply + upgrade.add2
+Upgrade = table {needed = function(player) returns true/false; price=number; effect = function(player) return add1,mult,add2;}
+
+Cursors:
+|ID  |NAME                           |NEEDED              |PRICE(/3x2)        |EFFECTS
+1    Reinforced index finger           1                  100                 cursor.add1 = 0.02;
+2    Carpal tullen prefention cream    1                  400                 cursor.multiply = 2;
+3    Ambidextrous                     10                  10'000              cursur.multiply = 2;
+4    Thousand fingers                 20                  500'000             cursor.add2 = 0.02*otherBuildings;
+5    Million fingers                  40                  50'000'000          cursor.add2 = 0.1*otherBuildings;
+6    Billion fingers                  80                  500'000'000         cursor.add2 = 0.4*otherBuildings;
+7    Trillion fingers                120                  5'000'000'000       cursor.add2 = 2*otherBuildings;
+44   Quadrillion fingers             160                  50'000'000'000      cursor.add2 = 4*otherbuildings;
+83   Quintillion fingers             200                  50'000'000'000'000  cursor.add2 = 20*otherBuildings;
+110  Sextillion fingers              240                  500'000'000'000'000 cursor.add2 = 40*otherBuildings;
+
+
+Grandmas:
+|ID  |NAME                           |NEEDED              |PRICE(/3X2)        |EFFECTS
+8    Forwards from grandma             1                  1'000               grandma.add1 = 0.06
+9    Steel-plated rolling pins         1                  10'000              grandma.multiply = 2;
+10   Lubricated dentures              10                  100'000             grandma.multiply = 2;
+45   Prune juice                      50                  5'000'000           grandma.multiply = 2;
+111  Double-thick glasses            100                  100'000'000         grandma.multiply = 2;
+58   Farmer grandmas                  15 farms            50'000              grandma.multiply = 2;
+59   Worker grandmas                  15 factories        300'000             grandma.multiply = 2;
+60   Miner grandmas                   15 mines            1'000'000           grandma.multiply = 2;
+61   Cosmic grandmas                  15 shipments        4'000'000           grandma.multiply = 2;
+62   Transmuted grandmas              15 alchemy labs     20'000'000          grandma.multiply = 2;
+63   Altered grandmas                 15 portals          166'666'600         grandma.multiply = 2;
+64   Grandmas' grandmas               15 time machines    12'345'678'900      grandma.multiply = 2;
+104  Antigrandmas                     15 antimatters      399'999'999'900     grandma.multiply = 2;
+
+
+Farms:
+|ID  |NAME                           |NEEDED              |PRICE(/3x2)        |EFFECTS
+11   Cheap hoes                        1                  5'000               farm.add1 = 0.2;
+12   Fertilizer                        1                  50'000              farm.multiply = 2;
+13   Cookie trees                     10                  500'000             farm.multiply = 2;
+46   Genetically-modified cookies     50                  25'000'000          farm.multiply = 2;
+112  Gingerbread scarecrows          100                  500'000'000         farm.multiply = 2;
+
+
+Factories:
+|ID  |NAME                           |NEEDED              |PRICE(/3x2)        |EFFECTS
+14   Sturdier conveyor belts           1                  30'000              factory.add1 = 0.8;
+15   Child labor                       1                  300'000             factory.multiply = 2;
+16   Sweatshop                        10                  3'000'000           factory.multiply = 2;
+47   Radium reactors                  50                  150'000'000         factory.multiply = 2;
+113  Recombobulators                 100                  3'000'000'000       factory.multiply = 2;
+
+
+Mines:
+|ID  |NAME                           |NEEDED              |PRCE(/3x2)         |EFFECTS
+17   Sugar gas                         1                  100'000             mine.add1 = 2;
+18   Megadrill                         1                  1'000'000           mine.multiply = 2;
+19   Ultradrill                       10                  10'000'000          mine.multiply = 2;
+48   Ultimadrill                      50                  500'000'000         mine.multiply = 2;
+114  H-bomb mining                   100                  10'000'000'000      mine.multiply = 2;
+
+
+Shipments:
+|ID  |NAME                           |NEEDED              |PRICE(/3x2)        |EFFECTS
+20   Vanilla nebulae                   1                  400'000             shipment.add1 = 6;
+21   Wormholes                         1                  4'000'000           shipment.multiply = 2;
+22   Frequent flyer                   10                  40'000'000          shipment.multiply = 2;
+49   Warp drive                       50                  2'000'000'000       shipment.multiply = 2;
+115  Chocolate monoliths             100                  40'000'000'000      shipment.multiply = 2;
+
+
+Alchemy labs:
+|ID  |NAME                           |NEEDED              |PRICE(/3x2)        |EFFECTS
+
