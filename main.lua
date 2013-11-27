@@ -6,7 +6,7 @@ event.next = function(self) table.remove(self, 1) end
 event.push = function(self, func) table.insert(self, func) end
 
 
-print("LoveBot IRC BOT is running!")
+bot.print("LoveBot IRC BOT is running!")
 
 load = function()
 
@@ -15,15 +15,15 @@ load = function()
 	local ok = irc:connect(bot.address,bot.port)
 
 	if ok == 1 then
-		print("Connected to the network!")
+		bot.print("Connected to the network!")
 	else
-		print("Couldn't connect!")
+		bot.print("Couldn't connect!")
 	end
 
 	irc:send("NICK "..bot.nick.."\r\n")
 	irc:send("USER "..bot.uname.." 8 * :"..bot.uname.."\r\n")
 	irc:send("JOIN "..bot.channel.."\r\n")
-	irc:settimeout(0)
+	irc:settimeout(1000)
 
 	update()
 
@@ -45,7 +45,7 @@ update = function()
 		elseif reload then
 			irc:close()
 			reload = nil
-			print "Reloading sequence initialized."
+			bot.print "Reloading sequence initialized."
 			dofile 'main.lua'
 		end
 

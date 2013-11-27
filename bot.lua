@@ -11,9 +11,7 @@ patterns = {
 
 local iOpen, iPopen = io.open, io.popen
 
-messages = {}
-
-
+messages = messages or {}
 
 noticed = {}
 
@@ -172,14 +170,14 @@ parse = function(msg)
 
 	if not sender or not source or not command then 
 
-		print(msg)
+		bot.print(msg)
 		return msg
 
 	end
 
 	if commands.received[command] then
 
-		print(sender..'|'..args..'\n')
+		bot.print(sender..'|'..args..'\n')
 		return commands.received[command](sender, source, args)
 
 	end
@@ -194,7 +192,7 @@ sendMessage = function(str, target)
 
 	irc:send(': PRIVMSG '..target..' :'..str..'\r\n')
 
-	print(bot.nick..'|'..target..' :'..str..'\n')
+	bot.print(bot.nick..'|'..target..' :'..str..'\n')
 
 	return str
 
@@ -413,7 +411,7 @@ com = {
 		end
 		return true
 	end,
-	lua = function(code, source, target)
+	lua = function(code, source, target, silent)
 		local f = io.open('code.lua', 'w')
 		f:write(code)
 		f:close()
@@ -423,8 +421,8 @@ com = {
 		f:close()
 		t = t:gsub('[\n\r]', '; ')
 		if #t > 400 then t = t:sub(1, 395)..'[...]' end
-		reply(source, target, t)
-		return true
+		if not silent then reply(source, target, t) end
+		return t
 	end,
 	google = function(query, source, target)
 		local q = urlify(query)
@@ -454,7 +452,7 @@ com = {
 		else
 			pattern = pattern:safify()
 			for i = #messages, 1, -1 do
-				local v = messages[i]
+				local v = messages[i]--[[
 				local success, result = pcall(string.match, v[2], pattern)
 				if not success then sendNotice('Nice try. '..result, source) return end
 				if result then
@@ -465,13 +463,18 @@ com = {
 						reply(source, target, '<'..v[1]..'> '..res)
 					end
 					return true
-				end
+				end--]]
+                local m = com.lua(("print((string.gsub([=======[%s]=======], [=======[%s]=======], [=======[%s]=======])))"):format(v[2], pattern, out or ''), source, target, true)
+                if not (m == v[2]..'; ') then 
+                    reply(source, target, '<'..v[1]..'> '..m:sub(1, -3))
+                    return true
+                 end
 			end
 			sendNotice("No message matching your query was found.", source)
 		end
 		return true
 	end,
-	cookie = dofile 'modules/cookie.lua',
+	cookie = dofile 'modules/cookie.lua'.command,
 	notice = function(yes, source)
 		noticed[source] = (yes ~= 'no' and yes ~= 'pm')
 		local f = io.open("settings/notice", 'w')

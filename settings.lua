@@ -1,8 +1,7 @@
 settings = {showSource = false}
 
 masters = {
-Nixola = 0,
-Darkwater = 0
+Nixola = 0 
 }
 
 ignored = {}
@@ -14,3 +13,10 @@ bot = {
 	port = 6667,
 	channel = "#novaember"
 }
+
+bot.print = function(...)
+
+	---[[
+	print(...)--]]
+
+end

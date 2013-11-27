@@ -9,33 +9,55 @@ for i, v in ipairs(cookie.buildings) do
 	cookie.buildings[v.name:lower()] = v
 end
 
-string.beautify = function(str)
+string.beautify = function(n)
 
-	str = tostring(str)
+        str = tostring(n)
 
-	local decimal
+        n = tonumber(n)
 
-	if str:find '%.' then
+        local decimal
 
-		str, decimal = str:match '(.+)%.(.+)'
+        if str:find '%.' then
 
-	end
+                str, decimal = str:match '(.+)%.(.+)'
 
-	str = str:reverse()
+        end
 
-	while str:find '%d%d%d%d' do
+        if n >= 100 then
 
-		str = str:gsub('(%d%d%d)(%d)', "%1'%2", 1)
+            decimal = nil
 
-	end
+        end
 
-	str = str:reverse()
+        str = str:reverse()
+
+        while str:find '%d%d%d%d' do
+
+                str = str:gsub('(%d%d%d)(%d)', "%1 %2", 1)
+
+        end
+
+        str = str:reverse()
 
 
-	return str.. (decimal and '.'..decimal or '')
+        return str.. (decimal and ','..decimal or '')
 
 end
 
+
+ls = function(path)
+
+    local f = io.popen('ls '..path, 'r')                                                                                            
+    local files = {}                                                                                     
+    for file in f:lines() do                                                                                                        
+        if not (file:match'.+%.lua$' or file:match '.+%.txt' or file == 'bac') then                                                 
+            table.insert(files, file)                                                                                               
+        end                                                                                                                         
+    end                                                                                                                             
+    f:close()
+
+    return files
+end
 
 cookie.price = function(player, building, quantity)
 
@@ -207,7 +229,7 @@ cookie.command = function(query, source, target, silent)
 
 	player:update()
 
-	if action == 'buy' then
+	if action == 'buy' or action == 'but' or action == 'butt' then
 
 		local quantity
 		if element:match("%S+%s+%S+") then
@@ -353,15 +375,8 @@ cookie.command = function(query, source, target, silent)
 
 	elseif action == 'rank' then
 
-		local f = io.popen('ls cookie', 'r')
-		local files = {}
-		local rank = tonumber(Oelement) or Oelement
-		for file in f:lines() do
-			if not (file:match'.+%.lua$' or file:match '.+%.txt' or file == 'bac') then
-				table.insert(files, file)
-			end
-		end
-		f:close()
+		local files = ls('cookie')
+        local rank = tonumber(Oelement) or Oelement
 		local players = {}
 		for i, v in ipairs(files) do
 			players[i] = cookie.loadPlayer(v)
@@ -417,4 +432,4 @@ cookie.command = function(query, source, target, silent)
 end
 
 
-return cookie.command
+return {command = cookie.command, module = cookie}
