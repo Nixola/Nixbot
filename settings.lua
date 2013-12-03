@@ -1,7 +1,9 @@
 settings = {showSource = false}
 
+--settings.Master = true
+
 masters = {
-Nixola = 0 
+nixola = 0 
 }
 
 ignored = {}

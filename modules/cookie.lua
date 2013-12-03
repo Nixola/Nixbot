@@ -1,6 +1,17 @@
 local cookie = {}
 cookie.__index = cookie
 cookie.buildings = dofile 'cookie/settings.lua'
+cookie.buildings.list = "|cursor|grandma|farm|factory|mine|shipment|alchemylab|portal|timemachine|antimattercondenser|"
+cookie.actionsList = "|show|buy|cps|prices|sell|ranks|"
+cookie.autocomplete = function(list, str)
+
+    local building
+    local _, n = list:gsub('|('..str..'.-)%|', function(p) building = p return '' end)
+    if n == 1 then return building
+    else return nil, n end
+
+end
+
 local classOf = setmetatable
 
 lastCookie = {}
@@ -9,11 +20,36 @@ for i, v in ipairs(cookie.buildings) do
 	cookie.buildings[v.name:lower()] = v
 end
 
+realTime = function(s)
+
+    local secs = math.floor(s%60)
+
+    local mins = math.floor(s%3600/60)
+
+    local hours = math.floor(s%(3600*24)/3600)
+
+    local days = math.floor(s%(3600*24*7)/3600/24)
+
+    local weeks = math.floor(s/3600/24/7)
+
+    local ans = ''
+
+    ans = ans .. (weeks>0 and weeks..' weeks, ' or '')
+    ans = ans .. (days >0 and days.. ' days, ' or '')
+    ans = ans .. (hours>0 and hours..' hours, ' or '')
+    ans = ans .. (mins >0 and mins.. ' minutes, ' or '')
+    ans = ans .. (secs >0 and secs.. ' seconds, ' or '')
+
+    ans = ans:sub(1, -3)
+
+    return ans
+end
+
 string.beautify = function(n)
-
-        str = tostring(n)
-
+        
         n = tonumber(n)
+
+        str = string.format('%f', n)
 
         local decimal
 
@@ -23,7 +59,7 @@ string.beautify = function(n)
 
         end
 
-        if n >= 100 then
+        if n >= 100 or n%1 <= 0.01 then
 
             decimal = nil
 
@@ -59,32 +95,56 @@ ls = function(path)
     return files
 end
 
+cookie.empty = [[
+lasttime:0;
+cookies:0;
+cursor:0;
+grandma:0;
+farm:0;
+factory:0;
+mine:0;
+shipment:0;
+alchemylab:0;
+portal:0;
+timemachine:0;
+antimattercondenser:0;
+]]
+
 cookie.price = function(player, building, quantity)
 
 	quantity = quantity or 1
 
 	local quant = player[building:lower()]
-
+    --[[
 	local s = 0
 
 	for i = 0, quantity-1 do
 
 		s = s + cookie.buildings[building:lower()].price*(1.15^(quant+i))
 
-	end
+	end--]]
 
-	return s
+    local X = cookie.buildings[building:lower()].price
+
+    local Y = quant
+
+    local n = quantity
+
+    s = (-1/3)*(20^n-23^n)*X*(23^Y)*(20^(-n-Y+1))
+
+	return s == s and s
 
 end
 
-
+--[[
 cookie.loadPlayer = function(name)
 
-	local f = io.open("cookie/"..name, 'rw')
+    local fname = name:lower()
+	local f = io.open("cookie/saves/"..fname, 'rw')
 	local t = {name = name}
 	local l = f and f:read '*l' or os.time()
 	t.lastTime = tonumber(string.match(l, int))
-	t.cookies = tonumber(string.match(f and f:read '*l' or 1, float))
+	t.cookies = tonumber(string.match(f and f:read '*l' or 0, float))
 
 	for i, v in ipairs(cookie.buildings) do
 		t[v.name:lower()] = tonumber(string.match(f and f:read '*l' or 0, int))
@@ -93,20 +153,36 @@ cookie.loadPlayer = function(name)
 
 	return classOf(t, cookie), f ~= nil
 
+end--]]
+
+cookie.loadPlayer = function(nick)
+    local fname = nick:lower()
+    local f = io.open("cookie/saves/"..fname, 'r')
+    local t = {name = nick}
+    local raw = f and f:read '*a' or cookie.empty
+    f:close()
+    raw = raw:gsub('\n', '')
+    for statement in raw:gmatch("[^%;]+") do
+        local i, v = statement:match "(.+)%:(.+)"
+        if i and v then
+            t[i:lower()] = tonumber(v)
+        end
+    end
+    return setmetatable(t, cookie), f ~= nil
 end
 
 
 cookie.save = function(player)
 
-	local f = io.open('cookie/'..player.name, 'w')
+	local f = io.open('cookie/saves/'..player.name:lower(), 'w')
 
-	f:write(player.time, ' last time\n')
+	f:write('lasttime:', player.time or os.time(), ';\n')
 
-	f:write(player.cookies, ' cookies\n')
+	f:write('cookies:', player.cookies, ';\n')
 
 	for i, v in ipairs(cookie.buildings) do
 
-		f:write(player[v.name:lower()], ' ', v.name, 's\n')
+		f:write(v.name:lower(), ':', player[v.name:lower()], ';\n')
 
 	end
 
@@ -118,7 +194,7 @@ end
 cookie.update = function(player)
 
 	player.time = os.time()
-	local dt = player.time - player.lastTime
+	local dt = player.time - player.lasttime
 	local cps = 0
 
 	for i, v in ipairs(cookie.buildings) do
@@ -134,23 +210,32 @@ cookie.update = function(player)
 end
 
 
-cookie.list = function(player)
+cookie.list = function(player, el)
 
 	local str = 'You have %s cookies%s.'
 
 	str = str:format(string.beautify(math.floor(player.cookies)), '%s')
 
 	local list = {}
+    
+    if el then
 
-	for i, v in ipairs(cookie.buildings) do
+        list[1] = {name = el, i = player[el]}
 
-		if player[v.name:lower()] > 0 then
+    else
 
-			list[#list+1] = {name = v.name, i = i}
+    	for i, v in ipairs(cookie.buildings) do
 
-		end
+	    	if player[v.name:lower()] > 0 then
 
-	end
+		    	list[#list+1] = {name = v.name, i = i}
+
+	    	end 
+
+    	end
+
+    end
+
 	--another for
 
 	for i, v in ipairs(list) do
@@ -189,9 +274,11 @@ cookie.getPrices = function(player)
 
 	for i, v in ipairs(cookie.buildings) do
 
-		local Price = cookie.buildings[v.name:lower()].price*(1.15^player[v.name:lower()])
+		local Price = player:price(v.name:lower())
+
+        Price = Price and string.beautify(math.ceil(Price)) or "NaN - contact Nix"
 		
-		str = str .. v.name..': '..string.beautify(math.ceil(Price))..'¢; '
+		str = str .. v.name..': '..Price..'¢; '
 
 	end
 
@@ -204,9 +291,9 @@ cookie.command = function(query, source, target, silent)
 
 	local player = cookie.loadPlayer(source)
 
-	query = query or nil
-
-	local action, element = string.match(query or '', "^(%S+)%s*(.*)")
+	query = query and query:lower()
+    
+    local action, element = string.match(query or '', "^(%S+)%s*(.*)")
 
 	local Oaction, Oelement = action, element
 
@@ -215,8 +302,19 @@ cookie.command = function(query, source, target, silent)
 
 	action, element = action:lower(), element:lower()
 
+    local a, n = cookie.autocomplete(cookie.actionsList, action)
+
+    if action == '' then a = action end
+
+    if a then action = a
+    else local _ = not silent and reply(source, target, n == 0 and "That action doesn't exist." or "Please be more specific.")
+    end
+
 	if action == '' then
 
+        if target == bot.channel then
+            return true
+        end
 		if lastCookie[source] and lastCookie[source] >= os.time() then
 			lastCookie[source] = lastCookie[source] + 1
 			reply(source, target, ("You can't use ,cookie more than once a second. Wait %d seconds before using it."):format(lastCookie[source]-os.time()))
@@ -229,16 +327,39 @@ cookie.command = function(query, source, target, silent)
 
 	player:update()
 
+    local bought
+
 	if action == 'buy' or action == 'but' or action == 'butt' then
 
-		local quantity
+        if target == bot.channel then
+            return true
+        end
+
+		local quantity, Oel
 		if element:match("%S+%s+%S+") then
 
 			element, quantity = element:match "(%S+)%s+(%S+)"
+            Oel = Oelement:match "(%S+)%s+%S+"
+
+            quantity = cookie.autocomplete(quantity, '|all|')
 
 			if not (quantity == 'all' or tonumber(quantity)) then quantity = nil end
 
-		end
+        else
+
+            Oel = Oelement
+
+        end
+        if not (element == '') then
+            local b, n = cookie.autocomplete(cookie.buildings.list, element)
+
+            if not b then
+                local _ = not silent and reply(source, target, n == 0 and "There's no such building." or "Please be more accurate.")
+                return true
+            else
+                element = b
+            end
+        end
 
 		if not cookie.buildings[element] then
 			reply(source, target, "Buildings: "..player:getPrices())
@@ -246,21 +367,37 @@ cookie.command = function(query, source, target, silent)
 		end
 
 
-		local Price = player:price(element)
+		local Price = player:price(element, quantity ~= 'all' and quantity)
+
+        if not Price then
+
+            reply(source, target, element.."'s price is NaN (Not a Number), maybe you have too many? Contact Nix about this, including "..quantity)
+            return true
+
+        end
 
 		if player.cookies < Price then
-			reply(source, target, "You don't have enough cookies to buy it.")
+            local diff = Price-player.cookies
+            local cps = player.cps
+            local secs = diff/cps
+            
+			reply(source, target, "You need "..string.beautify(diff).." more cookies to buy "..((quantity == 1 or not quantity) and "it." or "them.") .. " With your current cps rate, "..(secs < math.huge and "it will take you "..realTime(secs).."." or " you will never be able to."))
 			return true
 		end
 
 		player[element] = player[element] + 1
 		player.cookies = player.cookies - Price
+        bought = Oel
 
 		if quantity then
 
 			for i = 1, (quantity == 'all' and 6/0 or tonumber(quantity)-1) do
 
 				Price = player:price(element)
+                if not Price then 
+                    reply(source, target, element.."'s price is NaN (Not a Number), maybe you have too many? Contact Nixola about this, including "..quantity)
+                    break
+                end
 				if player.cookies < Price then
 					break
 				end
@@ -274,14 +411,32 @@ cookie.command = function(query, source, target, silent)
 
 	elseif action == 'cps' then
 
+        if target == bot.channel then
+            return true
+        end
+
 		reply(source, target, "You are baking "..string.beautify(player.cps).." cookies per second.")
 		return true
 
 	elseif action == 'price' or action == 'prices' then
 
+        if target == bot.channel then
+            return true
+        end
+
 		local e, q = element:match "(%S+)%s+(%S+)"
 
 		element = e or element
+
+        local b, n = cookie.autocomplete(cookie.buildings.list, element)
+        if not (element == '') then
+            if not b then
+                local _ = not silent and reply(source, target, n == 0 and "There's no such building." or "Please be more accurate.")
+                return true
+            else
+                element = b
+            end
+        end
 
 		if element and element ~= '' and not cookie.buildings[element] then
 			if not silent then sendNotice("Invalid building.", source) end
@@ -303,8 +458,10 @@ cookie.command = function(query, source, target, silent)
 
 		end
 
+        local price = player:price(element, q)
 
-		reply(source, target, ("Your next%s %s will cost %s¢."):format((q and ' '..q or ''), building or element, string.beautify(math.ceil(player:price(element, q)))))
+        price = price and string.beautify(price) or "NaN"
+		reply(source, target, ("Your next%s %s will cost %s¢."):format((q and ' '..q or ''), building or element,price))
 		return true
 
 	elseif action == 'help' then
@@ -312,6 +469,10 @@ cookie.command = function(query, source, target, silent)
 		return true
 
 	elseif action == 'sell' then
+
+        if target == bot.channel then
+            return true
+        end
 
 		local quantity
 		if element:match("%S+%s+%S+") then
@@ -321,6 +482,15 @@ cookie.command = function(query, source, target, silent)
 			if not (quantity == 'all' or tonumber(quantity)) then quantity = nil end
 
 		end
+
+        local b, n = cookie.autocomplete(cookie.buildings.list, element) 
+
+        if not b then
+            local _ = not silent and reply(source, target, n == 0 and "There's no such building." or "Please be more accurate.")
+            return true
+        else
+            element = b
+        end
 
 		if not cookie.buildings[element] then
 			if not silent then sendNotice("Invalid building.", source) end
@@ -356,8 +526,9 @@ cookie.command = function(query, source, target, silent)
 	elseif action == 'show' then
 		local ans, answer = "%s: cookies = %s, cps = %s", ''
 		local skip = true
+        local p, exists
 		for match in Oelement:gmatch "([^%s]+)" do
-			local p, exists = cookie.loadPlayer(match)
+			p, exists = cookie.loadPlayer(match)
 			if not exists then
 				if not silent then
 					sendNotice(match.." doesn't even exist.", source)
@@ -369,13 +540,13 @@ cookie.command = function(query, source, target, silent)
 			end
 		end
 		if skip then return true end
-		answer = answer:sub(1, -3)
+		answer = answer .. "http://nixo.ga/?player=" .. p.name
 		reply(source, target, answer)
 		return true
 
-	elseif action == 'rank' then
+	elseif action == 'rank' or action == 'ranks' then
 
-		local files = ls('cookie')
+		local files = ls('cookie/saves')
         local rank = tonumber(Oelement) or Oelement
 		local players = {}
 		for i, v in ipairs(files) do
@@ -415,7 +586,7 @@ cookie.command = function(query, source, target, silent)
 
 		end
 
-		ans = ans:sub(1, -3)
+		ans = ans .. "Leaderboard: http://nixo.ga/?ranks"
 
 		reply(source, target, ans)
 		return true
@@ -425,7 +596,7 @@ cookie.command = function(query, source, target, silent)
 		return true
 	end
 
-	reply(source, target, player:list())
+	reply(source, target, player:list(bought))
 	
 	player:save()
 	return true

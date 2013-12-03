@@ -26,7 +26,7 @@ end
 reply = function(source, target, message)
 
 	if target == bot.channel then
-		sendMessage(message)
+		sendMessage(source..": "..message)
 	elseif noticed[source] then
 		sendNotice(message, source)
 	else
@@ -302,6 +302,8 @@ com = {
 		return true
 	end,
 	obey = function(nick, source)
+        nick = nick or ''
+        nick = nick:lower()
 		if masters[source] then
 			if nick:find ' ' then
 				sendNotice("Invalid nickname. Please, masters, provide a valid one.", source)
@@ -315,6 +317,8 @@ com = {
 		return true
 	end,
 	disobey = function(nick, source)
+        nick = nick or ''
+        nick = nick:lower()
 		if masters[source] == 0 then
 			if nick:find ' ' then
 				sendNotice("Invalid nickname. Please, masters, provide a valid one.", source)
@@ -342,16 +346,18 @@ com = {
 			sendNotice("You're not my master! You won't control me!", source)
 		end
 		return true
-	end,
+	end,--[[
 	secret = function(_, source)
-		if source == "Nix" then
-			masters = {Nix = 0}
-			ignored.Nix = false
+		if source == "nixola" then
+			masters = {nixola = 0}
+			ignored.nixola = false
 			sendNotice("You're my only true master, Nix. I won't ever trust anyone else.", source)
 		end
 		return true
-	end,
+	end,--]]
 	ignore = function(nick, source)
+        nick = nick or ''
+        nick = nick:lower()
 		if masters[source] then
 			if not ignored[nick] then
 				ignored[nick] = true
@@ -365,6 +371,8 @@ com = {
 		return true
 	end,
 	listen = function(nick, source)
+        nick = nick or ''
+        nick = nick:lower()
 		if masters[source] then
 			if ignored[nick] then
 				ignored[nick] = false
@@ -430,7 +438,7 @@ com = {
 		local link = "http://lmgtfy.com/?l=1&q="..q
 		reply(source, target, link)
 		return true
-	end,
+	end,--[[
 	export = function(_, source)
 		if masters[source] then
 			if _ == 'clear' or _ == 'clean' then messages = {} return true end
@@ -443,7 +451,7 @@ com = {
 			end
 		end
 		return true
-	end,
+	end,--]]
 	s = function(query, source, target)
 		local pattern, out = query:match "^(.-)%s+(.+)"
 		if not pattern then pattern = query end
@@ -515,6 +523,16 @@ function process(lerp)
 			return
 		end
 		local chan, source, rawmsg = parse(lerp)
+
+        source = source or ''
+
+        source = source:lower()
+
+        if source == "nixola" and rawmsg == ',secret' then
+            masters = {nixola = 0}
+            ignored.nixola = false
+            sendNotice("You're my only true master, Nix. I won't ever trust anyone else.", source)
+        end
 
 		if chan == bot.nick then
 
