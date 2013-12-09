@@ -5,6 +5,8 @@ cookie.buildings.list = "|cursor|grandma|farm|factory|mine|shipment|alchemylab|p
 cookie.actionsList = "|show|buy|cps|prices|sell|ranks|"
 cookie.autocomplete = function(list, str)
 
+    str = str:gsub("[^a-zA-Z0-9]", function(p) return '%'..p end)
+
     local building
     local _, n = list:gsub('|('..str..'.-)%|', function(p) building = p return '' end)
     if n == 1 then return building
@@ -254,6 +256,8 @@ cookie.list = function(player, el)
 
 		else
 
+            print("DEBUG: ", "."..v.name:lower()..".")
+
 			str = str:format(' and '..player[v.name:lower()]..' '..name..(player[v.name:lower()] == 1 and '' or 's'))
 
 		end
@@ -291,7 +295,9 @@ cookie.command = function(query, source, target, silent)
 
 	local player = cookie.loadPlayer(source)
 
-	query = query and query:lower()
+	query = query and query:lower() or ''
+
+    query = query:match "^%s*(.-)%s*$"
     
     local action, element = string.match(query or '', "^(%S+)%s*(.*)")
 
@@ -329,7 +335,9 @@ cookie.command = function(query, source, target, silent)
 
     local bought
 
-	if action == 'buy' or action == 'but' or action == 'butt' then
+    element = element:match "^%s*(.-)%s*$"
+
+	if action == 'buy' then
 
         if target == bot.channel then
             return true
@@ -341,7 +349,9 @@ cookie.command = function(query, source, target, silent)
 			element, quantity = element:match "(%S+)%s+(%S+)"
             Oel = Oelement:match "(%S+)%s+%S+"
 
-            quantity = cookie.autocomplete(quantity, '|all|')
+            if not tonumber(quantity) then
+                quantity = cookie.autocomplete(quantity, '|all|')
+            end
 
 			if not (quantity == 'all' or tonumber(quantity)) then quantity = nil end
 
@@ -350,6 +360,7 @@ cookie.command = function(query, source, target, silent)
             Oel = Oelement
 
         end
+
         if not (element == '') then
             local b, n = cookie.autocomplete(cookie.buildings.list, element)
 
@@ -387,7 +398,7 @@ cookie.command = function(query, source, target, silent)
 
 		player[element] = player[element] + 1
 		player.cookies = player.cookies - Price
-        bought = Oel
+        bought = element
 
 		if quantity then
 

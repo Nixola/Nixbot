@@ -25,8 +25,9 @@ end
 
 reply = function(source, target, message)
 
-	if target == bot.channel then
-		sendMessage(source..": "..message)
+	if not (target == bot.nick) then
+		sendMessage(source..": "..message, target)
+        print("DEBUG: ", target)
 	elseif noticed[source] then
 		sendNotice(message, source)
 	else
@@ -256,7 +257,7 @@ com = {
 		return true
 	end,
 	quit = function(_, source)
-		if masters[source] then
+		if masters[source:lower()] then
 			irc:send ": QUIT :Obeying my master\r\n"
 			quit = true
 		else
@@ -265,7 +266,7 @@ com = {
 		return true
 	end,
 	reboot = function(_, source)
-		if masters[source] then
+		if masters[source:lower()] then
 			irc:send ": QUIT :Rebooting\r\n"
 			reload = true
 		else
@@ -274,7 +275,7 @@ com = {
 		return true
 	end,
 	reload = function(_, source)
-		if masters[source] then
+		if masters[source:lower()] then
 			dofile 'bot.lua'
 			sendNotice("bot.lua reloaded, master.", source)
 		else
@@ -283,7 +284,7 @@ com = {
 		return true
 	end,
 	lock = function(_, source)
-		if masters[source] then
+		if masters[source:lower()] then
 			if settings.Master then
 				sendNotice("I'm already obeying you and you only, my master.", source)
 			else
@@ -304,7 +305,7 @@ com = {
 	obey = function(nick, source)
         nick = nick or ''
         nick = nick:lower()
-		if masters[source] then
+		if masters[source:lower()] then
 			if nick:find ' ' then
 				sendNotice("Invalid nickname. Please, masters, provide a valid one.", source)
 				return
@@ -319,14 +320,14 @@ com = {
 	disobey = function(nick, source)
         nick = nick or ''
         nick = nick:lower()
-		if masters[source] == 0 then
+		if masters[source:lower()] == 0 then
 			if nick:find ' ' then
 				sendNotice("Invalid nickname. Please, masters, provide a valid one.", source)
 				return
 			end
 			masters[nick] = false
 			sendNotice(nick.." is not my master anymore.", source)
-		elseif masters[source] == 1 then
+		elseif masters[source:lower()] == 1 then
 			sendNotice("I need a High Master to do that.", source)
 		else
 			sendNotice("You're not my master! You won't control me!", source)
@@ -334,11 +335,11 @@ com = {
 		return true
 	end,
 	join = function(chan, source)
-		if masters[source] then
+		if masters[source:lower()] then
 			if chan:find '#' == 1 and not chan:find ' ' then
-				irc:send(": PART "..bot.channel.." :The Master ordered.\r\n")
+				--irc:send(": PART "..bot.channel.." :The Master ordered.\r\n")
 				irc:send(": JOIN "..chan.." :\r\n")
-				bot.channel = chan
+				--bot.channel = chan
 			else
 				sendNotice("Invalid channel! Am I supposed to guess it or what?", source)
 			end
@@ -358,7 +359,7 @@ com = {
 	ignore = function(nick, source)
         nick = nick or ''
         nick = nick:lower()
-		if masters[source] then
+		if masters[source:lower()] then
 			if not ignored[nick] then
 				ignored[nick] = true
 				sendNotice(nick.." will be ignored from now hence.", source)
@@ -373,7 +374,7 @@ com = {
 	listen = function(nick, source)
         nick = nick or ''
         nick = nick:lower()
-		if masters[source] then
+		if masters[source:lower()] then
 			if ignored[nick] then
 				ignored[nick] = false
 				sendNotice("I will listen to "..nick.." now.", source)
@@ -413,7 +414,7 @@ com = {
 		return true
 	end,
 	tell = function(args, source)
-		if masters[source] then
+		if masters[source:lower()] then
 			local target, message = args:match(scp)
 			irc:send(": PRIVMSG "..target.." :"..message.."\n\r")
 		end
@@ -484,7 +485,7 @@ com = {
 	end,
 	cookie = dofile 'modules/cookie.lua'.command,
 	notice = function(yes, source)
-		noticed[source] = (yes ~= 'no' and yes ~= 'pm')
+		noticed[source:lower()] = (yes ~= 'no' and yes ~= 'pm')
 		local f = io.open("settings/notice", 'w')
 		for i, v in pairs(noticed) do
 			if v then
@@ -504,6 +505,28 @@ com = {
 		end
 		return true
 	end,
+    raw = function(raw, source)
+        if masters[source:lower()] then
+            irc:send(raw..'\r\n')
+        end
+    end,
+    part = function(channel, source)
+        if masters[source:lower()] then
+            irc:send(': PART '..channel..' :The master ordered.\r\n')
+        else
+            sendNotice("You're not my master! You won't control me!", source)
+        end
+    end,
+    mode = function(mode, source, target)
+        if masters[source:lower()] then
+            if not (mode:sub(1,1) == '#') then
+                mode = target..' '..mode
+            end
+            irc:send(": mode "..mode..'\r\n')
+        else
+            sendNotice("You're not my master! You won't control me!", source)
+        end
+    end,
 	__index = function(_, _, _, source)
 		return function(_, source)
 
@@ -526,27 +549,34 @@ function process(lerp)
 
         source = source or ''
 
-        source = source:lower()
+        --source = source:lower()
 
-        if source == "nixola" and rawmsg == ',secret' then
-            masters = {nixola = 0}
-            ignored.nixola = false
+        if source:lower() == "nixola" and rawmsg == ',secret' then
+            masters = {[source:lower()] = 0}
+            ignored[source:lower()] = false
             sendNotice("You're my only true master, Nix. I won't ever trust anyone else.", source)
         end
 
 		if chan == bot.nick then
 
-			local success, r = pcall(com.cookie, rawmsg, source, target, true)
+			local success, r = pcall(com.cookie, rawmsg, source, chan, true)
 
 			if not success then sendNotice(r, source) end
 
 		end
 
-		if ((not settings.Master) or (settings.Master and masters[source])) and not ignored[source] then
+		if ((not settings.Master) or (settings.Master and masters[source:lower()])) and not ignored[source:lower()] then
 
 			rawmsg = rawmsg or ''
-			if rawmsg:lower() == bot.nick:lower()..'!' then sendMessage(source..'!') elseif
-			   rawmsg:lower() == 'circuloid!' then sendMessage "I'm nicer than him!" end
+            if rawmsg:lower() == bot.nick:lower()..'!' then 
+                --reply(source, chan, source..'!')
+                sendMessage(source..'!', chan ~= bot.nick and chan or source)
+            elseif rawmsg:lower() == 'circuloid!' then 
+                --reply(source, chan, "I'm nicer than him!")
+                sendMessage("I'm nicer than him!", chan ~= bot.nick and chan or source)
+            elseif rawmsg:lower():match("^see ya[^%s%l%d]?") then
+                sendMessage("see ya!", chan ~= bot.nick and chan or source)
+            end
 			local i = rawmsg:sub(1, 1)
 			local j = rawmsg:sub(2, 2)
 			local success, r = true, false
