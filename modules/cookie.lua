@@ -2,7 +2,7 @@ local cookie = {}
 cookie.__index = cookie
 cookie.buildings = dofile 'cookie/settings.lua'
 cookie.buildings.list = "|cursor|grandma|farm|factory|mine|shipment|alchemylab|portal|timemachine|antimattercondenser|"
-cookie.actionsList = "|show|buy|cps|prices|sell|ranks|"
+cookie.actionsList = "|show|buy|cps|prices|sell|ranks|help|"
 cookie.autocomplete = function(list, str)
 
     str = str:gsub("[^a-zA-Z0-9]", function(p) return '%'..p end)
@@ -162,7 +162,7 @@ cookie.loadPlayer = function(nick)
     local f = io.open("cookie/saves/"..fname, 'r')
     local t = {name = nick}
     local raw = f and f:read '*a' or cookie.empty
-    f:close()
+    if f then f:close() end
     raw = raw:gsub('\n', '')
     for statement in raw:gmatch("[^%;]+") do
         local i, v = statement:match "(.+)%:(.+)"
@@ -244,10 +244,12 @@ cookie.list = function(player, el)
 
 		local name
 
-		if v.name == 'factory' and player.factory > 1 then
+        local vname = v.name:lower()
+
+		if vname == 'factory' and player.factory > 1 then
 			name = 'factorie'
 		else
-			name = v.name
+			name = vname
 		end
 
 		if list[i+1] then

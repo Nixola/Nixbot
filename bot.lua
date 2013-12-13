@@ -230,7 +230,7 @@ google = {"!12google <3something>: too lazy to google for something? Let Nix
 s = {"!12s <3Lua pattern> <4string>: iterates backwards through the received messages, :gsub(pattern,string)ing the first appropriate one.",},
 cookie = {"!12cookie <3[action]> <4[element]> <5[param]>: Cookie is a shamelessly limited copy of Orteil's Cookie Clicker. 3Action and 4Element can be null (!12cookie), in which case you gain a cookie and get a list of your buildings.",
 		  "Actions: 3cps, takes no arguments, shows how many cookies you bake per second; 3buy: takes an element, which is a building, and tries to buy it with the available cookies, buys <5param> buildings if provided (!12cookie 3buy <4building> 5all buys as many as possible);",
-		  "3price: takes an element, which is a building, and shows you its price, lists the price of the buildings if <4Element> is null or invalid or tells you how much X buildings cost (e.g. !12cookie 3price 4factory5 6); 3sell: behaves like 3buy, except it sells X buildings for half the price you paid them and doesn't list anything. For a list of available buildings, use \"!12cookie 3buy\"."},
+		  "3price: takes an element, which is a building, and shows you its price, lists the price of the buildings if <4Element> is null or invalid or tells you how much X buildings cost (e.g. !12cookie 3price 4factory5 6); 3sell: behaves like 3buy, except it sells X buildings for half the price you paid them and doesn't list anything. For a list of available buildings, use \"!12cookie 3buy\" or visit http://nixo.ga/?buildings."},
 notice = {"!12notice <3no>: choose whether Nixbot should message or notice you when queried via PM. '!12notice 3no' or '!12notice 3pm' make it message you, anything else makes it notice you."}
 }
 
@@ -424,7 +424,8 @@ com = {
 		local f = io.open('code.lua', 'w')
 		f:write(code)
 		f:close()
-		os.execute("ulimit -t 1 && lua -l sandbox code.lua > out 2>&1")
+        local sandbox = not masters[source:lower()]
+		os.execute("ulimit -t 1 && lua "..(sandbox and "-l sandbox" or "").." code.lua > out 2>&1")
 		f = io.open("out", 'r')
 		local t = f:read '*a'
 		f:close()
