@@ -11,7 +11,7 @@ ignored = {}
 bot = {
 	uname = "Cookiebot",
 	nick = "Cookiebot",
-	address = "irc.freenode.net",
+	address = "adams.freenode.net",
 	port = 6667,
 	channel = "#novaember"
 }

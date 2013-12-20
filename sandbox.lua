@@ -24,6 +24,7 @@ io = {write = io.write}
 package.loaded.io = io
 package.loaded._G = _G
 package.loadlib = nil
+--debug = {getmetatable = debug.getmetatable}
 debug = nil
 package.loaded.debug = {}
 require = nil

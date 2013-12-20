@@ -3,7 +3,8 @@ dofile 'settings.lua'
 dofile 'bot.lua'
 event = {}
 event.next = function(self) table.remove(self, 1) end
-event.push = function(self, func) table.insert(self, func) end
+event.push =  table.insert
+event.clear = function(self) for i in ipairs(self) do self[i] = nil end end
 
 
 bot.print("LoveBot IRC BOT is running!")
@@ -23,17 +24,22 @@ load = function()
 	irc:send("NICK "..bot.nick.."\r\n")
 	irc:send("USER "..bot.uname.." 8 * :"..bot.uname.."\r\n")
 	irc:send("JOIN "..bot.channel.."\r\n")
-	irc:settimeout(1000)
+	irc:settimeout(1)
 
 	update()
 
 end
 
 update = function()
-
+    
+    local t, ot
 	while true do
+        t = os.time()
 		if event[1] then 
-			event[1]()
+			success, err = pcall(event[1].func, t, ot, event[1])
+            if not success then
+                sendNotice("Error in event: "..err, event[1].sender)
+            end
 			event:next()
 		end
 		local line, err = irc:receive("*l")
@@ -48,7 +54,7 @@ update = function()
 			bot.print "Reloading sequence initialized."
 			dofile 'main.lua'
 		end
-
+        ot = t
 	end
 
 end

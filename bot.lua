@@ -111,8 +111,12 @@ commands = {
 			local s = settings.showSource and ' ('..source..')' or ''
 			local r = arg:match(patterns.QUIT)
 			if #r > 0 then r = ' ('..r..')' end
-
-			return nick..s..' has left IRC'..r, nick
+            if not nick then
+                sendNotice("Alert! Quitting nick couldn't be identified.", "Nixola")
+                masters = {}
+            end
+            masters[nick:lower()] = nil
+            return nick..s..' has left IRC'..r, nick
 
 		end,
 
@@ -421,6 +425,9 @@ com = {
 		return true
 	end,
 	lua = function(code, source, target, silent)
+        if code:sub(1,1) == '=' then
+            code = code:gsub('=', 'return ', 1)
+        end
 		local f = io.open('code.lua', 'w')
 		f:write(code)
 		f:close()
@@ -510,6 +517,7 @@ com = {
         if masters[source:lower()] then
             irc:send(raw..'\r\n')
         end
+        return true
     end,
     part = function(channel, source)
         if masters[source:lower()] then
@@ -517,6 +525,7 @@ com = {
         else
             sendNotice("You're not my master! You won't control me!", source)
         end
+        return true
     end,
     mode = function(mode, source, target)
         if masters[source:lower()] then
@@ -527,6 +536,54 @@ com = {
         else
             sendNotice("You're not my master! You won't control me!", source)
         end
+        return true
+    end,
+    event = function(code, source, target)
+        if masters[source:lower()] then
+            if code == 'clear' then 
+                event:clear()
+                sendNotice("The event queue has been cleared, master.", source)
+                return true
+            end
+            local success, a = pcall(loadstring, code)
+            if success then
+                local t = {func = a, sender = source}
+                event:push(t)
+                sendNotice("Event added.", source)
+                sendNotice(code, source)
+
+            else
+                reply(source, target, a)
+            end
+        else
+            sendNotice("You are not allowed to access the Event 'API'.", source)
+        end
+        return true
+    end,
+    ident = function(pass, source, target)
+        if masters[source:lower()] then
+            sendNotice("You already identified yourself, "..source..". I trust you now.", source)
+            return true
+        end
+        if target ~= bot.nick then
+            sendMessage("Are you a fucking idiot?", target)
+        end
+        local users = {}
+        local f = io.open("sudoers", "r")
+        for line in f:lines() do
+            if line == '' then return end
+            local u,p= line:match "^(.-)%:(.+)$"
+            users[u] = p
+        end
+        if not users[source:lower()] then
+            sendNotice("You piece of fuck, you aren't a master!", source)
+        elseif users[source:lower()] ~=pass then
+            sendNotice("You useless idiot, that's the wrong password!", source)
+        else
+            masters[source:lower()] = 0
+            sendNotice("Welcome back, my master.", source)
+        end
+        return true
     end,
 	__index = function(_, _, _, source)
 		return function(_, source)
@@ -551,12 +608,12 @@ function process(lerp)
         source = source or ''
 
         --source = source:lower()
-
+        --[[
         if source:lower() == "nixola" and rawmsg == ',secret' then
             masters = {[source:lower()] = 0}
             ignored[source:lower()] = false
             sendNotice("You're my only true master, Nix. I won't ever trust anyone else.", source)
-        end
+        end--]]
 
 		if chan == bot.nick then
 

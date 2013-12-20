@@ -549,12 +549,12 @@ cookie.command = function(query, source, target, silent)
 			else
 				skip = false
 				p:update()
-				answer = answer .. ans:format(p.name, string.beautify(math.floor(p.cookies)), string.beautify(p.cps)) .. '; '
+				answer = answer .. ans:format(p.name, string.beautify(math.floor(p.cookies)), string.beautify(p.cps))
+                answer = answer .. ", http://nixo.ga/?player=" .. p.name .." ; "
 			end
 		end
 		if skip then return true end
-		answer = answer .. "http://nixo.ga/?player=" .. p.name
-		reply(source, target, answer)
+		reply(source, target, answer:sub(1, -4))
 		return true
 
 	elseif action == 'rank' or action == 'ranks' then
