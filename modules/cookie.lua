@@ -19,7 +19,7 @@ local classOf = setmetatable
 lastCookie = {}
 
 for i, v in ipairs(cookie.buildings) do
-	cookie.buildings[v.name:lower()] = v
+    cookie.buildings[v.name:lower()] = v
 end
 
 realTime = function(s)
@@ -49,36 +49,35 @@ end
 
 string.beautify = function(n)
         
-        n = tonumber(n)
+    n = tonumber(n)
 
-        str = string.format('%f', n)
+    str = string.format('%f', n)
 
-        local decimal
+    local decimal
 
-        if str:find '%.' then
+    if str:find '%.' then
 
-                str, decimal = str:match '(.+)%.(.+)'
+        str, decimal = str:match '(.+)%.(.+)'
 
-        end
+    end
 
-        if n >= 100 or n%1 <= 0.01 then
+    if n >= 100 or n%1 <= 0.01 then
 
-            decimal = nil
+        decimal = nil
 
-        end
+    end
 
-        str = str:reverse()
+    str = str:reverse()
 
-        while str:find '%d%d%d%d' do
+    while str:find '%d%d%d%d' do
 
-                str = str:gsub('(%d%d%d)(%d)', "%1 %2", 1)
+            str = str:gsub('(%d%d%d)(%d)', "%1 %2", 1)
 
-        end
+    end
 
-        str = str:reverse()
+    str = str:reverse()
 
-
-        return str.. (decimal and ','..decimal or '')
+    return str.. (decimal and ','..decimal or '')
 
 end
 
@@ -295,20 +294,20 @@ end
 
 cookie.command = function(query, source, target, silent)
 
-	local player = cookie.loadPlayer(source)
+    local player = cookie.loadPlayer(source)
 
-	query = query and query:lower() or ''
+    query = query and query:lower() or ''
 
     query = query:match "^%s*(.-)%s*$"
     
     local action, element = string.match(query or '', "^(%S+)%s*(.*)")
 
-	local Oaction, Oelement = action, element
+    local Oaction, Oelement = action, element
 
-	action = action or ''
-	element = element or ''
+    action = action or ''
+    element = element or ''
 
-	action, element = action:lower(), element:lower()
+    action, element = action:lower(), element:lower()
 
     local a, n = cookie.autocomplete(cookie.actionsList, action)
 
@@ -318,44 +317,44 @@ cookie.command = function(query, source, target, silent)
     else local _ = not silent and reply(source, target, n == 0 and "That action doesn't exist." or "Please be more specific.")
     end
 
-	if action == '' then
+    if action == '' then
 
         if target == bot.channel then
             return true
         end
-		if lastCookie[source] and lastCookie[source] >= os.time() then
-			lastCookie[source] = lastCookie[source] + 1
-			reply(source, target, ("You can't use ,cookie more than once a second. Wait %d seconds before using it."):format(lastCookie[source]-os.time()))
-			return true
-		else
-			lastCookie[source] = os.time()
-		end
+        if lastCookie[source] and lastCookie[source] >= os.time() then
+            lastCookie[source] = lastCookie[source] + 1
+            reply(source, target, ("You can't use ,cookie more than once a second. Wait %d seconds before using it."):format(lastCookie[source]-os.time()))
+            return true
+        else
+            lastCookie[source] = os.time()
+        end
 
-	end
+    end
 
-	player:update()
+    player:update()
 
     local bought
 
     element = element:match "^%s*(.-)%s*$"
 
-	if action == 'buy' then
+    if action == 'buy' then
 
         if target == bot.channel then
             return true
         end
 
-		local quantity, Oel
-		if element:match("%S+%s+%S+") then
+        local quantity, Oel
+        if element:match("%S+%s+%S+") then
 
-			element, quantity = element:match "(%S+)%s+(%S+)"
+            element, quantity = element:match "(%S+)%s+(%S+)"
             Oel = Oelement:match "(%S+)%s+%S+"
 
             if not tonumber(quantity) then
                 quantity = cookie.autocomplete(quantity, '|all|')
             end
 
-			if not (quantity == 'all' or tonumber(quantity)) then quantity = nil end
+            if not (quantity == 'all' or tonumber(quantity)) then quantity = nil end
 
         else
 
@@ -374,13 +373,13 @@ cookie.command = function(query, source, target, silent)
             end
         end
 
-		if not cookie.buildings[element] then
-			reply(source, target, "Buildings: "..player:getPrices())
-			return true
-		end
+        if not cookie.buildings[element] then
+            reply(source, target, "Buildings: "..player:getPrices())
+            return true
+        end
 
 
-		local Price = player:price(element, quantity ~= 'all' and quantity)
+	local Price = player:price(element, quantity ~= 'all' and quantity)
 
         if not Price then
 
@@ -389,38 +388,40 @@ cookie.command = function(query, source, target, silent)
 
         end
 
-		if player.cookies < Price then
+        if player.cookies < Price then
             local diff = Price-player.cookies
             local cps = player.cps
             local secs = diff/cps
             
-			reply(source, target, "You need "..string.beautify(diff).." more cookies to buy "..((quantity == 1 or not quantity) and "it." or "them.") .. " With your current cps rate, "..(secs < math.huge and "it will take you "..realTime(secs).."." or " you will never be able to."))
-			return true
-		end
+            reply(source, target, "You need "..string.beautify(diff).." more cookies to buy "..((quantity == 1 or not quantity) and "it." or "them.") .. " With your current cps rate, "..(secs < math.huge and "it will take you "..realTime(secs).."." or " you will never be able to."))
+            return true
+        end
 
-		player[element] = player[element] + 1
-		player.cookies = player.cookies - Price
+        Price = player:price(element)
+
+        player[element] = player[element] + 1
+        player.cookies = player.cookies - Price
         bought = element
 
-		if quantity then
+        if quantity then
 
-			for i = 1, (quantity == 'all' and 6/0 or tonumber(quantity)-1) do
+            for i = 1, (quantity == 'all' and 6/0 or tonumber(quantity)-1) do
 
-				Price = player:price(element)
+                Price = player:price(element)
                 if not Price then 
                     reply(source, target, element.."'s price is NaN (Not a Number), maybe you have too many? Contact Nixola about this, including "..quantity)
                     break
                 end
-				if player.cookies < Price then
-					break
-				end
+                if player.cookies < Price then
+                    break
+                end
 
-				player[element] = player[element] + 1
-				player.cookies = player.cookies - Price
+                player[element] = player[element] + 1
+                player.cookies = player.cookies - Price
 
-			end
+            end
 
-		end
+        end
 
 	elseif action == 'cps' then
 

@@ -123,7 +123,13 @@ commands = {
 		NICK = function(n, source, arg)
 
 			local s = settings.showSource and ' ('..source..')' or ''
-			if n == nick then nick = arg; u = 'You' else u = n end
+			if n == bot.nick then bot.nick = arg; u = 'You' else u = n end
+
+            if not n then
+                sendNotice("Alert! Changed nick couldn't be identified.", "Nixola")
+                masters = {}
+            end
+            masters[n:lower()] = nil
 
 			return u..s..' changed nick to '..arg, nick
 

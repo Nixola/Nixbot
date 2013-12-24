@@ -24,6 +24,7 @@ load = function()
 	irc:send("NICK "..bot.nick.."\r\n")
 	irc:send("USER "..bot.uname.." 8 * :"..bot.uname.."\r\n")
 	irc:send("JOIN "..bot.channel.."\r\n")
+    dofile("startup.lua")
 	irc:settimeout(1)
 
 	update()
