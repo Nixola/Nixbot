@@ -1,0 +1,2 @@
+clone https://bitbucket.org/MartinFelis/love-android-sdl2 and run ndk-build. ANDROID_SDK and ANDROID_NDK should suffice. Oh, okay, you then also have to add the following directories to your PATH variable: $ANDROID_SDK/tools:$ANDROID_SDK/platform-tools:$ANDROID_NDK:$ANDROID_NDK/ndk-standalone/bin
+https://www.youtube.com/watch?v=jgnG2wvykSE
