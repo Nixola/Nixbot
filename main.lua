@@ -36,6 +36,14 @@ update = function()
     local t, ot
 	while true do
         t = os.time()
+        if love and love.event then
+        	love.event.pump()
+        	for e in love.event.poll() do
+        		if e == "quit" then
+        			os.exit()
+        		end
+        	end
+        end
 		if event[1] then 
 			success, err = pcall(event[1].func, t, ot, event[1])
             if not success then
