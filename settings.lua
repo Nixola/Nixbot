@@ -2,9 +2,7 @@ settings = {showSource = false}
 
 --settings.Master = true
 
-masters = {
-nixola = 0 
-}
+masters = {}
 
 ignored = {}
 
