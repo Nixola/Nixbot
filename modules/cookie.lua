@@ -349,12 +349,7 @@ cookie.command = function(query, source, target, silent)
 
             element, quantity = element:match "(%S+)%s+(%S+)"
             Oel = Oelement:match "(%S+)%s+%S+"
-
-            if not tonumber(quantity) then
-                quantity = cookie.autocomplete(quantity, '|all|')
-            end
-
-            if not (quantity == 'all' or tonumber(quantity)) then quantity = nil end
+            quantity = tonumber(quantity) or cookie.autocomplete('|all|', quantity)
 
         else
 

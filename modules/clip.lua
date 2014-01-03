@@ -119,7 +119,6 @@ Notes.command = function(args, source, target)
         else
 
             sendNotice("Invalid action.", source)
-            print("DEBUG:", '.'..action..'.', '.'..arg..'.', '.'..args..'.')
             return true
 
         end

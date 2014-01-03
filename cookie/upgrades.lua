@@ -44,19 +44,19 @@ return {
         price = 500000000/3*2,
         effect = function(player) local s = 0; for i = 2, #cookie.buildings do s = s + player[cookie.buildings[i].name] end; return c{add2 = 0.4*s} end;},
 
-       {name =
-        requirements = 
-        effectStr =
-        gettable = 
-        price =
-        effect = },
+       {name ="Trillion fingers",
+        requirements = "120 cursors",
+        effectStr = "Each cursor gains 2 cps for each non-cursor building",
+        gettable = functon(player) return player.cursor >= 120 end,
+        price = 5000000000/3*2
+        effect = function(player) local s = 0; for i = 2, #cookie.buildings do s = s + player[cookie.buildings[i].name] end; return c{add2 = 2*s} end;},
 
-       {name =
-        requirements = 
-        effectStr =
-        gettable = 
-        price =
-        effect = },
+       {name = "Quadrillion fingers",
+        requirements = "160 cursors",
+        effectStr = "Each cursor gains 4 cps for each non-cursor building",
+        gettable = function(player) return player.cursor >= 160 end,
+        price = 50000000000/3*2
+        effect = function(player) local s = 0; for i = 2, #cookie.buildings do s = s + player[cookie.buildings[i].name] end; return c{add2 = 2*s} end;},
 
        {name =
         requirements = 
