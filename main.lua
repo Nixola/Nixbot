@@ -6,6 +6,19 @@ event.next = function(self) table.remove(self, 1) end
 event.push =  table.insert
 event.clear = function(self) for i in ipairs(self) do self[i] = nil end end
 
+ls = function(path)
+
+    local f = io.popen('ls '..path, 'r')                                                                                            
+    local files = {}                                                                                     
+    for file in f:lines() do                                                                                                        
+        if not (file:match'.+%.lua$' or file:match '.+%.txt' or file == 'bac') then                                                 
+            table.insert(files, file)                                                                                               
+        end                                                                                                                         
+    end                                                                                                                             
+    f:close()
+
+    return files
+end
 
 bot.print("LoveBot IRC BOT is running!")
 

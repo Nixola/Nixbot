@@ -7,8 +7,8 @@ masters = {}
 ignored = {}
 
 bot = {
-	uname = "Cookiebot",
-	nick = "Cookiebot",
+	uname = "Nixbot",
+	nick = "Nixbot",
 	address = "adams.freenode.net",
 	port = 6667,
 	channel = "#novaember"
@@ -16,7 +16,7 @@ bot = {
 
 bot.print = function(...)
 
-	---[[
+	--[[
 	print(...)--]]
 
 end
