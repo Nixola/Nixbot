@@ -169,6 +169,7 @@ commands = {
                 masters = {}
                 return
             end
+            arg = arg:sub(2, -1)
             masters[arg:lower()] = masters[n:lower()]
             masters[n:lower()] = nil
 

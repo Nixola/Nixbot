@@ -142,7 +142,9 @@ end)
 bot.commands:register("tell", function(args, source)
     if masters[source:lower()] then
         local target, message = args:match(scp)
-        irc:send(": PRIVMSG "..target.." :"..message.."\n\r")
+        sendMessage(message, target)
+    else
+        sendNotice("You're not my master! You won't control me!", source)
     end
     return true
 end)

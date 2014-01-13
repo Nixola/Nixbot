@@ -24,7 +24,19 @@ end
 setmetatable(channels, channels)
 
 local setColor = function(n)
-    io.write(string.char(0x1b), '[', '38;5;', n, 'm')
+    if n then
+        io.write(string.char(0x1b), '[38;5;', n, 'm')
+    else
+        io.write(string.char(0x1b), '[39m')
+    end
+end
+
+local setBold = function(bool)
+    if bool then
+        io.write(string.char(0x1b), '[1m')
+    else
+        io.write(string.char(0x1b), '[22m')
+    end
 end
 
 local color = require 'color'    
@@ -41,6 +53,26 @@ bot.PRIVMSG:register("log", function(nick, target, message)
     io.write(target)
     setColor(15)
     io.write('> ', color.mircToAnsi(message), '\n')
+end)
+
+bot.NOTICE:register("log", function(nick, target, message)
+
+    setColor(9)
+    setBold(true)
+    io.write '!'
+    setColor(channels[nick])
+    io.write(nick)
+    if target ~= bot.nick then
+        setColor(15)
+        io.write ':'
+        setColor(channels[target])
+        io.write(target)
+    end
+    setColor(9)
+    io.write('! ')
+    setBold(false)
+    setColor()
+    io.write(color.mircToAnsi(message), '\n')
 end)
 
 bot.SENTMESSAGE:register("log", function(target, message)

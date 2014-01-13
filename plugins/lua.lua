@@ -3,7 +3,7 @@ bot.commands:register("lua", function(code, source, target, silent)
     f:write(code)
     f:close()
     local sandbox = not masters[source:lower()]
-    os.execute("ulimit -t 1 && lua "..(sandbox and "-l sandbox" or "").." code.lua > out 2>&1")
+    os.execute("ulimit -t 1 && luajit "..(sandbox and "-l sandbox" or "").." code.lua > out 2>&1")
     f = io.open("out", 'r')
     local t = f:read '*a'
     f:close()

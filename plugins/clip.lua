@@ -91,7 +91,7 @@ Notes.command = function(args, source, target)
 
             end
 
-            reply(source, target, user[arg])
+            reply(source, target, source .. ': ' .. user[arg])
             return true
 
         elseif (action == "rem") or (action == "remove") or (action == "rm") or (action == "delete") or (action == "del") then
@@ -133,7 +133,7 @@ bot.JOIN:register("clip", function(nick, chan)
 
     if #user >= 1 then
 
-        Notes.command('', nick, chan)
+        Notes.command('', nick, bot.nick)
 
     end
 

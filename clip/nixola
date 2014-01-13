@@ -5,4 +5,3 @@ efivars kernel module was not loaded properly. Manually load it and create a boo
 uninstall pamac, thunderbird, subversion
 install lua5.1, love, love08, i3
 install awesomewm, openbox
-☺☻
