@@ -11,7 +11,7 @@ patterns = {
 
 local iOpen, iPopen = io.open, io.popen
 
-messages = messages or {}
+messages = messages or setmetatable({}, {__index = function(self, k) self[k] = {}; return self[k] end})
 
 reply = function(source, target, message)
 

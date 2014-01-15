@@ -36,7 +36,7 @@ bot.PRIVMSG:register("Command parser", function(nick, target, message)
         end
 
         
-        table.insert(messages, {nick, message})
+        table.insert(messages[target == bot.nick and nick or target], {nick, message})
         
     end
 
