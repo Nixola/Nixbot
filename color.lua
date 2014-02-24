@@ -7,6 +7,7 @@ end
 
 function color.mircToAnsi(text)
     local b = 0
+    text = tostring(text)
     local text = text:gsub(string.char(2), function()
         b = b + 1
         local char = b%2 == 1 and 1 or 22
@@ -64,7 +65,7 @@ color.mircToAnsi256 = function(c, isBG)
     elseif c == 2 then  return c2 .. "4m"
     elseif c == 3 then  return c2 .. "2m"
     elseif c == 4 then  return c2 .. "9m"
-    elseif c == 5 then  return c2 .. "2m"
+    elseif c == 5 then  return c2 .. "1m"
     elseif c == 6 then  return c2 .. "5m"
     elseif c == 7 then  return c2 .. "3m"
     elseif c == 8 then  return c2 .. "11m"

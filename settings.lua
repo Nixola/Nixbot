@@ -9,7 +9,7 @@ ignored = {}
 bot = {
 	uname = "Nixbot",
 	nick = "Nixbot",
-	address = "adams.freenode.net",
+	address = "irc.freenode.net",
 	port = 6667,
 	channel = "#novaember"
 }

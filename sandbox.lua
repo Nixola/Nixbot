@@ -25,7 +25,7 @@ package.loaded.io = io
 package.loaded._G = _G
 package.loadlib = nil
 --debug = {getmetatable = debug.getmetatable}
-debug = nil
+debug = {}
 package.loaded.debug = {}
 require = nil
 dofile = nil
@@ -33,3 +33,4 @@ loadfile = nil
 loadstring = nil
 load = nil
 package.loaders = {}
+jit = {arch = jit.arch, version = jit.version, os = jit.os, version_num = jit.version_num}

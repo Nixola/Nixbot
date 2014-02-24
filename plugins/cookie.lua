@@ -14,6 +14,16 @@ cookie.autocomplete = function(list, str)
 
 end
 
+ls = ls or function(path)
+
+    local f = io.popen("ls "..path)
+    local t = {}
+    for file in f:lines() do
+        t[#t+1] = file
+    end
+    return t
+end
+
 local classOf = setmetatable
 
 lastCookie = {}
@@ -596,6 +606,8 @@ cookie.command = function(query, source, target, silent)
 	return true
 end
 
-bot.commands:register("cookie", cookie.command)
+if bot then
+  bot.commands:register("cookie", cookie.command)
+end
 
 return {command = cookie.command, module = cookie}

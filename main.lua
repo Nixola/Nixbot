@@ -6,6 +6,14 @@ event.next = function(self) table.remove(self, 1) end
 event.push =  table.insert
 event.clear = function(self) for i in ipairs(self) do self[i] = nil end end
 
+remind = {}
+remind.add = function(self, osTime, message, target)
+    if not self[osTime] then
+        self[osTime] = {}
+    end
+    table.insert(self[osTime], {message, target})
+end
+
 ls = function(path)
 
     local f = io.popen('ls '..path, 'r')                                                                                            
@@ -64,6 +72,12 @@ update = function()
             end
 			event:next()
 		end
+        if remind[t] then
+            for i, v in ipairs(remind[t]) do
+                sendMessage(v[1], v[2])
+            end
+        end
+
 		local line, err = irc:receive("*l")
 		if line then
 			process(line)

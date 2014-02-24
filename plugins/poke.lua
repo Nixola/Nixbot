@@ -1,10 +1,3 @@
-bot.commands:register("poke", function(nick, source, target)
-    if not (target == bot.channel) then return end
-    if not nick or nick:find ' ' then sendNotice('Invalid nickname! F**k off!', source) return end
-    reply(source, target,'\001ACTION '..sentences[math.random(#sentences)]:format(nick)..'\001')
-    return true
-end)
-
 local sentences = {
 'pokes %s in the eye with a stick.',
 'slaps %s with a loaf of bread.',
@@ -14,3 +7,10 @@ local sentences = {
 'suggests %s to eat a shrimp',
 'uninstalled LÖVE from %s\'s PC',
 'installed Windows Vista on %s\'s pc'}
+
+bot.commands:register("poke", function(nick, source, target)
+    if target == bot.nick then return end
+    if not nick or nick:find ' ' then sendNotice('Invalid nickname! Fuck off!', source) return true end
+    reply(source, target, '\001ACTION ' .. sentences[math.random(#sentences)]:format(nick) .. '\001')
+    return true
+end)

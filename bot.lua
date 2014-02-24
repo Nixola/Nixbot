@@ -36,7 +36,12 @@ end
 
 function string.safify(string)
 
-    local f = iOpen('/tmp/pattern', 'w')
+    local f,e = iOpen('/tmp/pattern', 'w')
+
+    if not f then
+        print(e)
+        return
+    end
 
     f:write(string)
 
@@ -268,9 +273,10 @@ bot.commands = {
 
 bot.commands = {}
 bot.commands.register = function(self, name, func)
+    --[[
     if self[name] then
         return nil, "Command exists"
-    end
+    end--]]
     self[name] = func
 end
 

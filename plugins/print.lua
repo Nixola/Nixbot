@@ -52,7 +52,7 @@ bot.PRIVMSG:register("log", function(nick, target, message)
     setColor((target ~= bot.nick) and channels[target] or channels[nick])
     io.write(target)
     setColor(15)
-    io.write('> ', color.mircToAnsi(message), '\n')
+    io.write('> ', color.mircToAnsi(string.char(15)), color.mircToAnsi(message), '\n')
 end)
 
 bot.NOTICE:register("log", function(nick, target, message)
