@@ -1,9 +1,21 @@
-local f = io.popen("ls plugins", "r")
+local t = bot.plugins or {}
 
-for v in f:lines() do 
+if not bot.plugins then
+
+    local f = io.popen("ls plugins", "r")
+
+    for v in f:lines() do
+        t[#t+1] = v
+    end
+
+end
+
+for i, v in ipairs(t) do
+
     dofile("plugins/"..v)
-    print("Plugins."..v:sub(1, -5).." loaded.")
-end 
+    print("Plugin " .. v .. " loaded.")
+
+end
 
 bot.PRIVMSG:register("Command parser", function(nick, target, message) 
 

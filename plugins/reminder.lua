@@ -19,7 +19,13 @@ bot.commands:register("remind", function(message, nick, target)
 
     time = os.time() +s +m*60 +h*3600 +d*24*3600
 
-    remind:add(time, nick .. ": " .. message, target)
+    local f = function()
+
+        sendMessage(nick .. ": " .. message, target)
+
+    end
+
+    cron.add(time, f)
 
     sendNotice("'"..message.."' will be reminded you at " .. os.date("%X", time) .. " (local hour).", nick)
 

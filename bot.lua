@@ -112,6 +112,8 @@ bot.NOTICE = class(bot.callback)
 bot.CTCP = class(bot.callback)
 bot.ERROR = class(bot.callback)
 
+bot.onLoad = class(bot.callback)
+
 bot.SENTMESSAGE = class(bot.callback)
 bot.SENTNOTICE  = class(bot.callback)
 

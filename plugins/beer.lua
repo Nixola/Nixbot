@@ -63,6 +63,8 @@ bot.PRIVMSG:register("beerz", function(nick, target, message)
 
     if not isFido[nick:lower()] then return end
 
+    if true then return end
+
     local sender, amount, dogeTarget = message:match("^Wow!%s+([^%s]+)%ssent Ð(%d%d+) to ([^%s]+)!")
 
     if nick and amount and dogeTarget and (dogeTarget:lower() == bot.nick:lower()) then

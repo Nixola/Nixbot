@@ -127,6 +127,7 @@ Notes.command = function(args, source, target)
 
 end
 
+--[[
 bot.JOIN:register("clip", function(nick, chan)
 
     local user = Notes.load(nick:lower())
@@ -137,7 +138,7 @@ bot.JOIN:register("clip", function(nick, chan)
 
     end
 
-end)
+end)--]]
 
 
 bot.commands:register("clip", Notes.command)
