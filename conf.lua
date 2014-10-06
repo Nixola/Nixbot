@@ -1,6 +1,6 @@
 function love.conf(t)
     t.identity = nil
-    --t.version = "whatever"
+    --t.version = "whatever"asd
     t.console = true
 
     t.window.title = "Nixbot"
