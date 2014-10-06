@@ -54,3 +54,14 @@ bot.PRIVMSG:register("Command parser", function(nick, target, message)
     end
 
 end)
+
+
+bot["396"]:register("bot.onLoad", function(nick, host)
+
+    if nick:lower() == bot.nick:lower() then
+
+        bot.onLoad:fire()
+
+    end
+
+end)

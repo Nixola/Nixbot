@@ -4,11 +4,11 @@ lotto.tickets = {}
 lotto.jackpot = 0
 lotto.lastJackpot = 0
 lotto.payout = 100 --%
-lotto.cost = 10
+lotto.cost = 5
 lotto.time = 600
 lotto.announceTime = 120
 lotto.factor = 1
-lotto.channel = "#windoge"
+lotto.channel = "#piggy"
 
 
 lotto.pick = function()
@@ -46,7 +46,7 @@ lotto.pick = function()
 
     if winner then
         sendMessage("\00311" .. winner .. "\0032, you won the lottery! Next draw in\00311 " .. realTime(lotto.time), lotto.channel)
-        Doge.tip(winner, lotto.jackpot, lotto.channel)
+        Piggy.tip(winner, lotto.jackpot, lotto.channel)
     end
     lotto.tickets = {}
     lotto.jackpot = 0
@@ -74,7 +74,7 @@ lotto.announce = function()
 
         lotto.lastJackpot = lotto.jackpot
 
-        sendMessage("\0035The jackpot is\0034 "..lotto.jackpot.."\0035, next draw in\0034 " .. realTime(nextDraw-time), lotto.channel)
+        sendMessage("\0034The jackpot is\0035 "..lotto.jackpot.."\0034, next draw in\0035 " .. realTime(nextDraw-time), lotto.channel)
 
     end
 
@@ -85,7 +85,7 @@ lotto.announce = function()
 end
 
 
-Doge.tipped:register("dogeLotto", function(nick, channel, amount)
+Piggy.tipped:register("piggyLotto", function(nick, channel, amount)
 
     channel = channel:lower()
     
@@ -109,7 +109,9 @@ end)
 
 
 
-bot.onLoad:register("dogeLotto", function()
+bot.onLoad:register("piggyLotto", function()
+
+    irc:send(": JOIN " .. lotto.channel .. "\r\n")
 
     local time = os.time()
     local nextDraw = math.floor(time/lotto.time)*lotto.time+lotto.time

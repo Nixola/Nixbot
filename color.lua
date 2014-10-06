@@ -2,7 +2,7 @@ local string = require("string")
 local color = {}
 
 function color.strip(text)
-    return text:gsub("(%d*),?(%d*)", "")
+    return text:gsub("(%d?%d?),?(%d?%d?)", "")
 end
 
 function color.mircToAnsi(text)

@@ -34,6 +34,10 @@ event.next = function(self) table.remove(self, 1) end
 event.push =  table.insert
 event.clear = function(self) for i in ipairs(self) do self[i] = nil end end
 
+settings.control = settings.control or ('.' .. args[1] .. '.fifo')
+
+local control = io.open(settings.control, 'r')
+
 --[[
 remind = {}
 remind.add = function(self, osTime, message, target)
@@ -92,7 +96,17 @@ load = function()
     end
 	irc:settimeout(0.1)
 
-    bot.onLoad:fire()
+    math.randomseed(os.time())
+
+    if control then
+
+        os.execute("echo '' > \"" .. settings.control .. "\" &")
+
+    else
+
+        print("Warning: couldn't locate control fifo. Bot will start without control module.")
+
+    end
 
 	update()
 
@@ -127,6 +141,13 @@ update = function()
                 for i, v in ipairs(cron[rt]) do
                     v()
                 end
+            end
+        end
+
+        if control then
+            local line = control:read '*l'
+            if line and line ~= '' then
+                bot.PRIVMSG:fire("!MASTER!", bot.nick, '!' .. line)
             end
         end
 

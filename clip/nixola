@@ -1,7 +1,0 @@
-clone https://bitbucket.org/MartinFelis/love-android-sdl2 and run ndk-build. ANDROID_SDK and ANDROID_NDK should suffice. Oh, okay, you then also have to add the following directories to your PATH variable: $ANDROID_SDK/tools:$ANDROID_SDK/platform-tools:$ANDROID_NDK:$ANDROID_NDK/ndk-standalone/bin
-https://www.youtube.com/watch?v=jgnG2wvykSE
-1q2w3e4r5t6yQAWSEDRFTGYH
-efivars kernel module was not loaded properly. Manually load it and create a boot entry for DISC /dev/sda, PART 2 and LOADER \EFI\manjaro_grub\grubx64.efi , in UEFI Boot Manager using efibootmgr
-uninstall pamac, thunderbird, subversion
-install lua5.1, love, love08, i3
-install awesomewm, openbox

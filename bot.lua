@@ -1,5 +1,5 @@
 incomingPattern = [[
-:(.-)!(.-)%s(%u-)%s(.-)$]]
+:(.-)%s(%S-)%s(.-)$]]
 patterns = {
 
     JOIN = '(.+)$',
@@ -7,6 +7,8 @@ patterns = {
     PRIVMSG = '(%S+)%s%:(.*)',
     QUIT = ':*(.*)',
     NOTICE = '(%S+)%s%:(.*)',
+    ["330"] = '%S+%s(%S+)%s(%S+)%s:.+',
+    ["396"] = '(%S+)%s(%S+)%s:.+'
 }
 
 local iOpen, iPopen = io.open, io.popen
@@ -111,6 +113,8 @@ bot.NICK = class(bot.callback)
 bot.NOTICE = class(bot.callback)
 bot.CTCP = class(bot.callback)
 bot.ERROR = class(bot.callback)
+bot["330"] = class(bot.callback)
+bot["396"] = class(bot.callback)
 
 bot.onLoad = class(bot.callback)
 
@@ -121,7 +125,7 @@ commands = {
 
     received = {
 
-        JOIN = function(nick, source, arg)
+        JOIN = function(nick, arg)
 
             local chan = arg:match(patterns.JOIN)
 
@@ -129,22 +133,21 @@ commands = {
 
         end,
 
-        PART = function(nick, source, args)
+        PART = function(nick, args)
 
-            local s = settings.showSource and ' ('..source..')' or ''
             local chan, reason = args:match(patterns.PART)
 
             bot.PART:fire(nick, chan, reason)
 
         end,
 
-        PRIVMSG = function(nick, source, args)
+        PRIVMSG = function(nick, args)
 
             local target, message = args:match(patterns.PRIVMSG)
 
             if message:match "\001(.+)\001" then
 
-                commands.received.CTCP(nick, source, message:match "\001(.+)\001")
+                commands.received.CTCP(nick, message:match "\001(.+)\001")
 
             else
 
@@ -154,7 +157,7 @@ commands = {
             
         end,
 
-        QUIT = function(nick, source, arg)
+        QUIT = function(nick, arg)
 
             local reason = arg:match(patterns.QUIT)
             
@@ -169,7 +172,7 @@ commands = {
 
         end,
 
-        NICK = function(n, source, arg)
+        NICK = function(n, arg)
 
             if not n then
                 sendNotice("Alert! Changed nick couldn't be identified.", "Nixola")
@@ -184,7 +187,7 @@ commands = {
 
         end,
 
-        NOTICE = function(n, source, arg)
+        NOTICE = function(n, arg)
 
             local target, notice = arg:match(patterns.NOTICE)
 
@@ -192,7 +195,7 @@ commands = {
 
         end,
 
-        CTCP = function(nick, source, args)
+        CTCP = function(nick, args)
 
             local params = {}
 
@@ -208,30 +211,45 @@ commands = {
 
         end,
 
-        ERROR = function(nick, source, args)
+        ERROR = function(nick, args)
 
             bot.ERROR:fire(args)
 
             reload = true
 
+        end,
+
+        ["330"] = function(sender, args)
+
+            local nick, account = args:match(patterns["330"])
+
+            bot["330"]:fire(nick, account)
+
+        end,
+
+        ["396"] = function(sender, args)
+
+            local account, hostname = args:match(patterns["396"])
+
+            bot["396"]:fire(account, hostname)
+
         end
+
     }
 
 }
 
 parse = function(msg)
 
-    local sender, source, command, args = msg:match(incomingPattern)
+    local sender, command, args = msg:match(incomingPattern)
 
-    if not sender or not source or not command then 
+    if not sender or not command then return msg end
 
-        return msg
-
-    end
+    sender = sender:match("^(.-)!.-$") or sender
 
     if commands.received[command] then
 
-        return commands.received[command](sender, source, args)
+        return commands.received[command](sender, args)
 
     end
 

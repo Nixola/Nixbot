@@ -204,3 +204,46 @@ bot.commands:register("ident", function(pass, source, target)
     end
     return true
 end)
+
+
+bot.onLoad:register("master.check", function()
+
+    for i in pairs(masters) do
+
+        irc:send(": WHOIS " .. i .. "\r\n")
+
+    end
+
+end)
+
+
+bot.JOIN:register("master.check", function(nick, chan)
+
+    if masters[nick:lower()] == false then
+
+        irc:send(": WHOIS " .. nick .. "\r\n")
+
+    end
+
+end)
+
+
+bot.QUIT:register("master.check", function(nick)
+
+    if masters[nick:lower()] then
+
+        masters[nick:lower()] = false
+
+    end
+
+end)
+
+
+bot["330"]:register("master.check", function(nick, account)
+
+    if masters[nick:lower()] == false then
+
+        masters[nick:lower()] = true
+
+    end
+end)

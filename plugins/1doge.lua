@@ -24,8 +24,7 @@ local isFido = {
     fidoge = true,
     fido0 = true,
     fido1 = true,
-    fido2 = true,
-    fido3 = true
+    fido2 = true
 }
 
 
@@ -38,6 +37,17 @@ bot.NOTICE:register("Doge.auth", function(source, target, message)
         if not nick or not isFido[nick] then return end
 
         Doge.authed[nick] = tonumber(level) == 3
+
+    end
+
+end)
+
+
+bot["330"]:register("Doge.auth", function(nick, account)
+
+    if isFido[nick:lower()] and account:lower() == "fido" then
+
+        Doge.authed[nick:lower()] = true
 
     end
 
@@ -84,7 +94,9 @@ bot.JOIN:register("doge.check", function(nick, chan)
 
     if isFido[nick:lower()] then
 
-        sendNotice("ACC "..nick, "NickServ")
+        cron.add(os.time()+1, function() 
+            irc:send(": WHOIS " .. nick .. "\r\n")
+        end)
 
     end
 
@@ -95,7 +107,14 @@ Doge.tipped = class(bot.callback)
 
 bot.onLoad:register("doge", function()
     for i, v in pairs(isFido) do
-        irc:send(": PRIVMSG Nickserv :ACC "..i.."\r\n")
+        irc:send(": WHOIS " .. i .. "\r\n")
+    end
+    irc:send ": PRIVMSG fido :balance\r\n"
+end)
+
+bot.commands:register("refresh", function()
+    for i, v in pairs(isFido) do
+        irc:send(": WHOIS " .. i .. "\r\n")
     end
     irc:send ": PRIVMSG fido :balance\r\n"
 end)

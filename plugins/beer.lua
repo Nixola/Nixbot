@@ -51,32 +51,14 @@ bot.commands:register("drink", function(message, nick, target)
 
 end)
 
-isFido = {}
-isFido.fido = true
-isFido.fidoge = true
-isFido.fido0 = true
-isFido.fido1 = true
-isFido.fido2 = true
-isFido.fido3 = true
+Doge.tipped:register("beerz", function(tipper, amount, channel)
 
-bot.PRIVMSG:register("beerz", function(nick, target, message)
+    amount = math.floor(amount/10)
 
-    if not isFido[nick:lower()] then return end
+    local s = amount == 1 and '' or 's'
 
-    if true then return end
+    reply(sender, target, "A hooker brought you " .. amount .. " beer" .. s .. " on a silver plate! You now have " .. beers[sender:lower()]+amount .. " beer" .. s .. ".")
 
-    local sender, amount, dogeTarget = message:match("^Wow!%s+([^%s]+)%ssent Ð(%d%d+) to ([^%s]+)!")
-
-    if nick and amount and dogeTarget and (dogeTarget:lower() == bot.nick:lower()) then
-
-        amount = math.floor(amount/10)
-
-        local s = amount == 1 and '' or 's'
-
-        reply(sender, target, "A hooker brought you " .. amount .. " beer" .. s .. " on a silver plate! You now have " .. beers[sender:lower()]+amount .. " beer" .. s .. ".")
-
-        beers[sender:lower()] = beers[sender:lower()] + amount
-
-    end
+    beers[sender:lower()] = beers[sender:lower()] + amount
 
 end)

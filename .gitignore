@@ -1,4 +1,13 @@
 run.bat
+cookie/saves/*
+cookie/backup/*
+sudoers
+clip
+fb.lua
+settings.lua
+lib/
+typo/
+wip/
 
 #################
 ## Eclipse
